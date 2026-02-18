@@ -1,0 +1,33 @@
+# Copy to terraform.tfvars and fill in values — never commit terraform.tfvars
+
+# ============================================================================
+# Proxmox API Connection
+# ============================================================================
+proxmox_endpoint  = "https://192.168.1.x:8006/"
+proxmox_api_token = "user@pam!token-id=your-secret-here"
+proxmox_insecure  = true   # set false if you have a valid TLS cert
+proxmox_node      = "pve"
+
+# ============================================================================
+# Storage (adjust to match your Proxmox storage IDs)
+# ============================================================================
+proxmox_storage_iso = "local"
+proxmox_storage_vm  = "local-lvm"
+
+# ============================================================================
+# VM Identity
+# ============================================================================
+vm_name     = "ubuntu-01"
+vm_id       = 100
+vm_username = "ubuntu"
+
+# SSH public key (paste full key string)
+vm_ssh_public_key = "ssh-ed25519 AAAA... user@host"
+
+# ============================================================================
+# VM Networking (static IP via cloud-init)
+# ============================================================================
+vm_ip      = "192.168.1.50/24"
+vm_gateway = "192.168.1.1"
+vm_dns     = "1.1.1.1"
+vm_bridge  = "vmbr0"
