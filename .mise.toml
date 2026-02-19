@@ -1,0 +1,42 @@
+[env]
+_.file = '.env'
+
+[tasks."tf:images:init"]
+description = "Initialize the Proxmox images Terraform module"
+dir = "terraform/proxmox/images"
+run = "terraform init"
+
+[tasks."tf:images:plan"]
+description = "Plan changes for Proxmox cloud images"
+dir = "terraform/proxmox/images"
+run = "terraform plan -var-file=../terraform.tfvars"
+
+[tasks."tf:images:apply"]
+description = "Apply changes for Proxmox cloud images"
+dir = "terraform/proxmox/images"
+run = "terraform apply -var-file=../terraform.tfvars"
+
+[tasks."tf:images:destroy"]
+description = "Destroy Proxmox cloud images"
+dir = "terraform/proxmox/images"
+run = "terraform destroy -var-file=../terraform.tfvars"
+
+[tasks."tf:vms:init"]
+description = "Initialize the Proxmox VMs Terraform module"
+dir = "terraform/proxmox/vms"
+run = "terraform init"
+
+[tasks."tf:vms:plan"]
+description = "Plan changes for Proxmox VMs"
+dir = "terraform/proxmox/vms"
+run = "terraform plan -var-file=../terraform.tfvars"
+
+[tasks."tf:vms:apply"]
+description = "Apply changes for Proxmox VMs"
+dir = "terraform/proxmox/vms"
+run = "terraform apply -var-file=../terraform.tfvars"
+
+[tasks."tf:vms:destroy"]
+description = "Destroy Proxmox VMs"
+dir = "terraform/proxmox/vms"
+run = "terraform destroy -var-file=../terraform.tfvars"

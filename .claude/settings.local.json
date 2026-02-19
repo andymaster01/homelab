@@ -8,7 +8,10 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:mise.jdx.dev)",
       "Bash(mise trust:*)",
-      "Bash(mise env:*)"
+      "Bash(mise env:*)",
+      "Bash(git -C /Users/mauro/code/home-setup log --oneline -10)",
+      "Bash(ls:*)",
+      "Bash(mise:*)"
     ]
   }
 }
