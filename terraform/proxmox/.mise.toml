@@ -1,0 +1,26 @@
+[env]
+_.file = '.env'
+
+[tasks.images-init]
+run = "cd images && terraform init"
+
+[tasks.images-plan]
+run = "cd images && terraform plan -var-file=../terraform.tfvars"
+
+[tasks.images-apply]
+run = "cd images && terraform apply -var-file=../terraform.tfvars"
+
+[tasks.images-destroy]
+run = "cd images && terraform destroy -var-file=../terraform.tfvars"
+
+[tasks.vms-init]
+run = "cd vms && terraform init"
+
+[tasks.vms-plan]
+run = "cd vms && terraform plan -var-file=../terraform.tfvars"
+
+[tasks.vms-apply]
+run = "cd vms && terraform apply -var-file=../terraform.tfvars"
+
+[tasks.vms-destroy]
+run = "cd vms && terraform destroy -var-file=../terraform.tfvars"

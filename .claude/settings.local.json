@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(terraform fmt:*)"
+      "Bash(terraform fmt:*)",
+      "WebFetch(domain:registry.terraform.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh search:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:mise.jdx.dev)",
+      "Bash(mise trust:*)",
+      "Bash(mise env:*)"
     ]
   }
 }

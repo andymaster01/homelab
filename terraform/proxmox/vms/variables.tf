@@ -14,26 +14,30 @@ variable "proxmox_api_token" {
 }
 
 variable "proxmox_insecure" {
-  description = "Skip TLS verification for Proxmox API (recommended for self-signed certs)"
+  description = "Skip TLS verification for Proxmox API"
   type        = bool
   default     = true
 }
 
 variable "proxmox_node" {
-  description = "Proxmox node name where the VM will be created"
+  description = "Proxmox node name"
   type        = string
-}
-
-variable "proxmox_storage_iso" {
-  description = "Proxmox storage ID for ISO/image files"
-  type        = string
-  default     = "local"
 }
 
 variable "proxmox_storage_vm" {
   description = "Proxmox storage ID for VM disk storage"
   type        = string
   default     = "local-lvm"
+}
+
+# ============================================================================
+# Cloud Image
+# ============================================================================
+
+variable "cloud_image_id" {
+  description = "Proxmox file ID of the cloud image (from images module output)"
+  type        = string
+  default     = "local:iso/ubuntu-24.04-cloudimg-amd64.img"
 }
 
 # ============================================================================

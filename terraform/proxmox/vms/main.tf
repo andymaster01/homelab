@@ -19,12 +19,15 @@ provider "proxmox" {
   }
 }
 
-resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
-  content_type = "iso"
-  datastore_id = var.proxmox_storage_iso
+resource "proxmox_virtual_environment_file" "vendor_cloud_init" {
+  content_type = "snippets"
+  datastore_id = "local"
   node_name    = var.proxmox_node
-  url          = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
-  file_name    = "ubuntu-24.04-cloudimg-amd64.img"
+
+  source_raw {
+    data      = file("${path.module}/files/vendor-cloud-init.yaml")
+    file_name = "${var.vm_name}-vendor-cloud-init.yaml"
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "vm" {
@@ -33,7 +36,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   vm_id     = var.vm_id
   started   = true
 
-  agent { enabled = false }
+  agent { enabled = true }
 
   cpu {
     cores   = 2
@@ -45,7 +48,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   disk {
     datastore_id = var.proxmox_storage_vm
-    file_id      = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
+    file_id      = var.cloud_image_id
     interface    = "virtio0"
     size         = 16
     discard      = "on"
@@ -60,7 +63,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
   operating_system { type = "l26" }
 
   initialization {
-    datastore_id = var.proxmox_storage_vm
+    datastore_id        = var.proxmox_storage_vm
+    vendor_data_file_id = proxmox_virtual_environment_file.vendor_cloud_init.id
 
     ip_config {
       ipv4 {
