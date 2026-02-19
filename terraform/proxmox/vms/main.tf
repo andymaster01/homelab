@@ -32,7 +32,9 @@ resource "proxmox_virtual_environment_file" "vendor_cloud_init" {
   node_name    = var.proxmox_node
 
   source_raw {
-    data      = file("${path.module}/files/vendor-cloud-init.yaml")
+    data = templatefile("${path.module}/files/vendor-cloud-init.yaml", {
+      username = var.vm_username
+    })
     file_name = "${var.vm_name}-vendor-cloud-init.yaml"
   }
 }
