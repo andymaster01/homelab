@@ -1,0 +1,11 @@
+test-conn:
+    #!/usr/bin/env sh
+    set -euo pipefail
+
+    ENDPOINT="https://192.168.1.101:8006"
+    TOKEN="terraform@pam!terraform-cli=c95f41dc-aa7e-429a-8b05-e33922146e9e"
+
+    curl -k -H "Authorization: PVEAPIToken=$TOKEN" "$ENDPOINT/api2/json/storage" | jq
+
+    #terraform@pam!terraform-cli
+    #c95f41dc-aa7e-429a-8b05-e33922146e9e
