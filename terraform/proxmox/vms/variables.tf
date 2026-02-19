@@ -31,16 +31,6 @@ variable "proxmox_storage_vm" {
 }
 
 # ============================================================================
-# Cloud Image
-# ============================================================================
-
-variable "cloud_image_id" {
-  description = "Proxmox file ID of the cloud image (from images module output)"
-  type        = string
-  default     = "local:iso/ubuntu-24.04-cloudimg-amd64.img"
-}
-
-# ============================================================================
 # VM Identity Variables
 # ============================================================================
 

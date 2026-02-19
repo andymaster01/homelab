@@ -19,6 +19,13 @@ provider "proxmox" {
   }
 }
 
+data "terraform_remote_state" "images" {
+  backend = "local"
+  config = {
+    path = "${path.module}/../images/terraform.tfstate"
+  }
+}
+
 resource "proxmox_virtual_environment_file" "vendor_cloud_init" {
   content_type = "snippets"
   datastore_id = "local"
@@ -48,7 +55,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   disk {
     datastore_id = var.proxmox_storage_vm
-    file_id      = var.cloud_image_id
+    file_id      = data.terraform_remote_state.images.outputs.ubuntu_cloud_image_id
     interface    = "virtio0"
     size         = 16
     discard      = "on"
