@@ -12,9 +12,13 @@ provider "proxmox" {
   endpoint  = var.proxmox_endpoint
   api_token = var.proxmox_api_token
   insecure  = var.proxmox_insecure
+
+  ssh {
+    agent    = true
+    username = "root"
+  }
 }
 
-# Download Ubuntu 24.04 cloud image directly to Proxmox storage
 resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
   content_type = "iso"
   datastore_id = var.proxmox_storage_iso
@@ -29,7 +33,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   vm_id     = var.vm_id
   started   = true
 
-  agent { enabled = true }
+  agent { enabled = false }
 
   cpu {
     cores   = 2

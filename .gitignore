@@ -16,3 +16,4 @@ ansible/*.retry
 
 # OS
 .DS_Store
+terraform/proxmox/.terraform.tfstate.lock.info
