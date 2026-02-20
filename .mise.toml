@@ -40,3 +40,17 @@ run = "terraform apply -var-file=../terraform.tfvars"
 description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
+
+[tasks."deploy:jellyfin"]
+description = "Deploy Jellyfin to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbook.yml"
+
+[tasks."deploy:jellyfin:status"]
+description = "Check Jellyfin container status on ubuntu-01"
+dir = "ansible"
+run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml ps'"
+
+[tasks."deploy:jellyfin:logs"]
+description = "Tail Jellyfin logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"

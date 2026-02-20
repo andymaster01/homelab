@@ -1,0 +1,43 @@
+---
+- name: Deploy Jellyfin
+  hosts: ubuntu-01
+  become: true
+
+  vars:
+    jellyfin_dir: /home/ubuntu/jellyfin
+    PUID: "{{ lookup('env', 'PUID') }}"
+    PGID: "{{ lookup('env', 'PGID') }}"
+    TZ: "{{ lookup('env', 'TZ') }}"
+
+  tasks:
+    - name: Create jellyfin directory
+      ansible.builtin.file:
+        path: "{{ jellyfin_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.copy:
+        src: ../docker/jellyfin/docker-compose.yml
+        dest: "{{ jellyfin_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: compose_file
+
+    - name: Template .env file
+      ansible.builtin.template:
+        src: templates/jellyfin.env.j2
+        dest: "{{ jellyfin_dir }}/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+      register: env_file
+
+    - name: Run docker compose up
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ jellyfin_dir }}"
+      when: compose_file.changed or env_file.changed

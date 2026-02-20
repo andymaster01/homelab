@@ -36,7 +36,3 @@ volumes:
     driver: local
   media:
     driver: local
-    driver_opts:
-      type: cifs
-      device: "//192.168.1.111/homedata"
-      o: "addr=192.168.1.111,username=${SMB_USER},password=${SMB_PASS},uid=${PUID},gid=${PGID},iocharset=utf8,noperm"
