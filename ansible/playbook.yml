@@ -4,12 +4,19 @@
   become: true
 
   vars:
+    state: present
     jellyfin_dir: /home/ubuntu/jellyfin
     PUID: "{{ lookup('env', 'PUID') }}"
     PGID: "{{ lookup('env', 'PGID') }}"
     TZ: "{{ lookup('env', 'TZ') }}"
 
   tasks:
+    - name: Run docker compose down
+      ansible.builtin.command:
+        cmd: docker compose down
+        chdir: "{{ jellyfin_dir }}"
+      when: state == "absent"
+
     - name: Create jellyfin directory
       ansible.builtin.file:
         path: "{{ jellyfin_dir }}"
@@ -17,6 +24,7 @@
         owner: ubuntu
         group: ubuntu
         mode: "0755"
+      when: state == "present"
 
     - name: Copy docker-compose.yml
       ansible.builtin.copy:
@@ -26,6 +34,7 @@
         group: ubuntu
         mode: "0644"
       register: compose_file
+      when: state == "present"
 
     - name: Template .env file
       ansible.builtin.template:
@@ -35,9 +44,10 @@
         group: ubuntu
         mode: "0600"
       register: env_file
+      when: state == "present"
 
     - name: Run docker compose up
       ansible.builtin.command:
         cmd: docker compose up -d
         chdir: "{{ jellyfin_dir }}"
-      when: compose_file.changed or env_file.changed
+      when: state == "present" and (compose_file.changed or env_file.changed)
