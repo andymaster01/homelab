@@ -41,6 +41,26 @@ description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
 
+[tasks."deploy:samba"]
+description = "Mount SMB share on ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook samba.yml"
+
+[tasks."deploy:samba:down"]
+description = "Unmount SMB share on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook samba.yml -e state=absent"
+
+[tasks."deploy:samba:status"]
+description = "Check SMB mount status on ubuntu-01"
+dir = "ansible"
+run = "ansible ubuntu-01 -m shell -a 'mount | grep /mnt/media' --become"
+
+[tasks."deploy:samba:tags"]
+description = "Run samba playbook with specific tags (e.g., mise run deploy:samba:tags packages)"
+dir = "ansible"
+run = "ansible-playbook samba.yml --tags $1"
+
 [tasks."deploy:jellyfin"]
 description = "Deploy Jellyfin to ubuntu-01 via Ansible"
 dir = "ansible"

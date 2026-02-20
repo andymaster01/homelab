@@ -11,7 +11,13 @@
       "Bash(mise env:*)",
       "Bash(git -C /Users/mauro/code/home-setup log --oneline -10)",
       "Bash(ls:*)",
-      "Bash(mise:*)"
+      "Bash(mise:*)",
+      "Bash(git -C /Users/mauro/code/home-setup log --oneline -15)",
+      "Bash(git -C /Users/mauro/code/home-setup diff docker/jellyfin/docker-compose.yml)",
+      "Bash(git -C /Users/mauro/code/home-setup diff HEAD -- docker/jellyfin/docker-compose.yml)",
+      "Bash(ansible-galaxy collection install:*)",
+      "Bash(find:*)",
+      "Bash(git -C /Users/mauro/code/home-setup log --oneline -20)"
     ]
   }
 }

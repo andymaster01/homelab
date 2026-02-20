@@ -13,7 +13,7 @@ services:
     volumes:
       - jellyfin_config:/config
       - jellyfin_cache:/cache
-      - media:/media:ro
+      - /mnt/media:/media:ro
 
     environment:
       PUID: ${PUID}
@@ -31,6 +31,4 @@ volumes:
   jellyfin_config:
     driver: local
   jellyfin_cache:
-    driver: local
-  media:
     driver: local
