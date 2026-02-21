@@ -11,3 +11,10 @@
         extra_zfs_properties:
           mountpoint: "{{ item.path }}"
       loop: "{{ zfs_datasets }}"
+
+    - name: Set directory permissions for media datasets
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: 1000
+        group: 1000
+      loop: "{{ zfs_datasets }}"
