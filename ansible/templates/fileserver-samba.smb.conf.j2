@@ -6,6 +6,7 @@
    logging = file
    server role = standalone server
    map to guest = never
+   host msdfs = no
 
 {% for ds in zfs_datasets %}
 [{{ ds.name }}]
