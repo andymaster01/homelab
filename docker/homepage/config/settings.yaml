@@ -5,3 +5,8 @@
 providers:
   openweathermap: openweathermapapikey
   weatherapi: weatherapiapikey
+
+layout:
+  Developer:
+    style: row
+    columns: 2
