@@ -8,5 +8,5 @@ services:
     ports:
       - 80:3000
     volumes:
-      - /home/homepage/config:/app/config
+      - /home/ubuntu/homepage/config:/app/config
     restart: unless-stopped
