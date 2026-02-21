@@ -1,0 +1,9 @@
+# zfs configuration
+zfs_pool: zfs-data
+zfs_datasets:
+  - name: media
+    path: /mnt/media
+  - name: photos-videos
+    path: /mnt/photos-videos
+  - name: containers-data
+    path: /mnt/containers-data

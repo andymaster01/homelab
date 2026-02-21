@@ -1,0 +1,13 @@
+---
+- name: Create ZFS datasets on bahamut
+  hosts: bahamut
+  become: true
+
+  tasks:
+    - name: Create ZFS datasets
+      community.general.zfs:
+        name: "{{ zfs_pool }}/{{ item.name }}"
+        state: present
+        extra_zfs_properties:
+          mountpoint: "{{ item.path }}"
+      loop: "{{ zfs_datasets }}"

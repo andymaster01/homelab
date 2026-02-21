@@ -1,0 +1,3 @@
+{% for ds in zfs_datasets %}
+{{ ds.path }}  {{ nfs_allowed_network }}(rw,sync,no_subtree_check,no_root_squash)
+{% endfor %}

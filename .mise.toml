@@ -79,3 +79,33 @@ run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/jellyfin/
 [tasks."deploy:jellyfin:logs"]
 description = "Tail Jellyfin logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"
+
+[tasks."deploy:fileserver:zfs"]
+description = "Create ZFS datasets on bahamut"
+dir = "ansible"
+run = "ansible-playbook fileserver-zfs.yml"
+
+[tasks."deploy:fileserver:samba"]
+description = "Configure Samba file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook fileserver-samba.yml"
+
+[tasks."deploy:fileserver:samba:down"]
+description = "Remove Samba from bahamut"
+dir = "ansible"
+run = "ansible-playbook fileserver-samba.yml -e state=absent"
+
+[tasks."deploy:fileserver:nfs"]
+description = "Configure NFS file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook fileserver-nfs.yml"
+
+[tasks."deploy:fileserver:nfs:down"]
+description = "Remove NFS from bahamut"
+dir = "ansible"
+run = "ansible-playbook fileserver-nfs.yml -e state=absent"
+
+[tasks."deploy:fileserver:status"]
+description = "Check Samba and NFS status on bahamut"
+dir = "ansible"
+run = "ansible bahamut -m shell -a 'systemctl status smbd nfs-kernel-server --no-pager' --become"

@@ -1,0 +1,19 @@
+[global]
+   workgroup = WORKGROUP
+   server string = File Server
+   log file = /var/log/samba/log.%m
+   max log size = 1000
+   logging = file
+   server role = standalone server
+   map to guest = never
+
+{% for ds in zfs_datasets %}
+[{{ ds.name }}]
+   path = {{ ds.path }}
+   browseable = yes
+   read only = no
+   valid users = {{ smb_user }}
+   create mask = 0644
+   directory mask = 0755
+
+{% endfor %}
