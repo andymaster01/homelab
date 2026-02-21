@@ -104,3 +104,22 @@ run = "ansible-playbook fileserver-nfs.yml -e state=absent"
 description = "Check Samba and NFS status on bahamut"
 dir = "ansible"
 run = "ansible bahamut -m shell -a 'systemctl status smbd nfs-kernel-server --no-pager' --become"
+
+[tasks."deploy:filebrowser-quantum"]
+description = "Deploy FileBrowser Quantum to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook filebrowser-quantum.yml"
+
+[tasks."deploy:filebrowser-quantum:down"]
+description = "Stop and remove FileBrowser Quantum containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook filebrowser-quantum.yml -e state=absent"
+
+[tasks."deploy:filebrowser-quantum:status"]
+description = "Check FileBrowser Quantum container status on ubuntu-01"
+dir = "ansible"
+run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/filebrowser-quantum/docker-compose.yaml ps'"
+
+[tasks."deploy:filebrowser-quantum:logs"]
+description = "Tail FileBrowser Quantum logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/filebrowser-quantum/docker-compose.yaml logs -f'"

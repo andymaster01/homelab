@@ -1,0 +1,5 @@
+server:
+  sources:
+    - path: /media # Do not use a root "/" directory or include the "/var" folder
+      config:
+        defaultEnabled: true

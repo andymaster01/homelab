@@ -1,0 +1,53 @@
+---
+- name: Deploy FileBrowser Quantum
+  hosts: ubuntu-01
+  become: true
+
+  vars:
+    state: present
+    filebrowser_dir: /home/ubuntu/filebrowser-quantum
+    # PUID: "{{ lookup('env', 'PUID') }}"
+    # PGID: "{{ lookup('env', 'PGID') }}"
+    # TZ: "{{ lookup('env', 'TZ') }}"
+
+  tasks:
+    - name: Run docker compose down
+      ansible.builtin.command:
+        cmd: docker compose down
+        chdir: "{{ filebrowser_dir }}"
+      when: state == "absent"
+
+    - name: Create filebrowser directory
+      ansible.builtin.file:
+        path: "{{ filebrowser_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+      when: state == "present"
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.copy:
+        src: ../docker/filebrowser-quantum/docker-compose.yaml
+        dest: "{{ filebrowser_dir }}/docker-compose.yaml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: compose_file
+      when: state == "present"
+
+    - name: Copy config.yaml
+      ansible.builtin.copy:
+        src: ../docker/filebrowser-quantum/config.yaml
+        dest: "{{ filebrowser_dir }}/config.yaml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: config_file
+      when: state == "present"
+
+    - name: Run docker compose up
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ filebrowser_dir }}"
+      when: state == "present" and (compose_file.changed or config_file.changed)
