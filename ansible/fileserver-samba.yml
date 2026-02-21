@@ -27,6 +27,13 @@
       notify: Restart Samba
       when: state == "present"
 
+    - name: Ensure system user exists
+      ansible.builtin.user:
+        name: "{{ smb_user }}"
+        shell: /usr/sbin/nologin
+        create_home: false
+      when: state == "present"
+
     - name: Create Samba user
       ansible.builtin.shell: |
         (echo '{{ smb_pass }}'; echo '{{ smb_pass }}') | smbpasswd -s -a {{ smb_user }}
