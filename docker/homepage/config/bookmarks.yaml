@@ -1,0 +1,60 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/bookmarks
+
+- Developer:
+    - Nextcloud:
+        - abbr: NX
+          href: http://192.168.1.100:8080/
+
+    - Nextcloud PHP My Admin:
+        - abbr: NPHP
+          href: http://192.168.1.100:8088/
+    
+    - Baserow:
+        - abbr: BR
+          href: http://192.168.1.100:8380/
+
+    - Jellyfin:
+        - abbr: JF
+          href: http://192.168.1.100:8096/
+
+    - Firefly III:
+        - abbr: FF
+          href: http://192.168.1.100:8400/
+
+    - Audiobookshelf:
+        - abbr: AB
+          href: http://192.168.1.100:13378/
+
+    - Kavita:
+        - abbr: KV
+          href: http://192.168.1.100:5000/
+
+    - Local Content Share:
+        - abbr: LCS
+          href: http://192.168.1.100:8090/
+
+    - Maelie:
+        - abbr: MA
+          href: http://192.168.1.100:9925/
+
+    - Kimai:
+        - abbr: KM
+          href: http://192.168.1.100:8001/
+
+    - ProxMox:
+        - abbr: PM
+          href: http://192.168.1.101:8006/
+
+    - Planka:
+        - abbr: PK
+          href: http://192.168.1.25:3000/
+
+    - AppFlowy Admin:
+        - abbr: AFA
+          href: http://192.168.1.25/console
+
+    - AppFlowy Web:
+        - abbr: AFW
+          href: http://192.168.1.25/

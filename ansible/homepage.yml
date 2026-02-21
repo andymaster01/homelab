@@ -1,0 +1,51 @@
+---
+- name: Deploy Homepage
+  hosts: ubuntu-01
+  become: true
+
+  vars:
+    state: present
+    homepage_dir: /home/ubuntu/homepage
+
+  tasks:
+    - name: Run docker compose down
+      ansible.builtin.command:
+        cmd: docker compose down
+        chdir: "{{ homepage_dir }}"
+      when: state == "absent"
+
+    - name: Create homepage directory
+      ansible.builtin.file:
+        path: "{{ homepage_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+      when: state == "present"
+
+    - name: Copy compose.yml
+      ansible.builtin.copy:
+        src: ../docker/homepage/compose.yml
+        dest: "{{ homepage_dir }}/compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: compose_file
+      when: state == "present"
+
+    - name: Copy config directory
+      ansible.builtin.copy:
+        src: ../docker/homepage/config/
+        dest: /home/homepage/config/
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+        directory_mode: "0755"
+      register: config_files
+      when: state == "present"
+
+    - name: Run docker compose up
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ homepage_dir }}"
+      when: state == "present" and (compose_file.changed or config_files.changed)

@@ -123,3 +123,22 @@ run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/filebrows
 [tasks."deploy:filebrowser-quantum:logs"]
 description = "Tail FileBrowser Quantum logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/filebrowser-quantum/docker-compose.yaml logs -f'"
+
+[tasks."deploy:homepage:deploy"]
+description = "Deploy Homepage to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook homepage.yml"
+
+[tasks."deploy:homepage:down"]
+description = "Stop and remove Homepage containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook homepage.yml -e state=absent"
+
+[tasks."deploy:homepage:status"]
+description = "Check Homepage container status on ubuntu-01"
+dir = "ansible"
+run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/homepage/compose.yml ps'"
+
+[tasks."deploy:homepage:logs"]
+description = "Tail Homepage logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/homepage/compose.yml logs -f'"
