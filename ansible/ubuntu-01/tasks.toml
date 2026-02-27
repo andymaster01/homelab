@@ -1,0 +1,6 @@
+["ubuntu-01:nfs:mount"]
+description = "Mount NFS share on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook ubuntu-01/mount-shares.yml"
+
+

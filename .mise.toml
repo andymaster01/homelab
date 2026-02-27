@@ -1,6 +1,11 @@
 [env]
 _.file = '.env'
 
+[task_config]
+includes = [
+  "ansible/ubuntu-01/tasks.toml",
+]
+
 [tasks."tf:images:init"]
 description = "Initialize the Proxmox images Terraform module"
 dir = "terraform/proxmox/images"
@@ -40,11 +45,6 @@ run = "terraform apply -var-file=../terraform.tfvars"
 description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
-
-[tasks."deploy:130:nfs"]
-description = "Mount NFS share on ubuntu-01"
-dir = "ansible"
-run = "ansible-playbook 130/mount-shares.yml"
 
 [tasks."deploy:nfs:down"]
 description = "Unmount NFS share on ubuntu-01"
