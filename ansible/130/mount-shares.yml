@@ -1,0 +1,25 @@
+---
+- name: Mount NFS shares on ubuntu-01
+  hosts: ubuntu-01
+  become: true
+  tasks:
+  
+    - name: Check local path exist
+      ansible.builtin.file:
+        path: /mnt/photos-videos-test
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Install nfs-common
+      ansible.builtin.apt:
+        name: nfs-common
+        update_cache: true
+
+    - name: Mount NFS Share
+      ansible.posix.mount:
+        src: "192.168.1.101:/mnt/photos-videos-test"
+        path: /mnt/photos-videos-test
+        fstype: nfs
+        opts: "rw,sync,hard,intr,timeo=30,_netdev"
+        state: mounted

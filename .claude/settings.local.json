@@ -19,7 +19,9 @@
       "Bash(find:*)",
       "Bash(git -C /Users/mauro/code/home-setup log --oneline -20)",
       "Bash(git -C /Users/mauro/code/home-setup ls-files:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep:*)",
+      "Bash(xargs:*)"
     ]
   }
 }
