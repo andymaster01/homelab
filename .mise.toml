@@ -75,6 +75,11 @@ run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/jellyfin/
 description = "Tail Jellyfin logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"
 
+[tasks."deploy:fileserver"]
+description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"
+dir = "ansible"
+run = "ansible-playbook fileserver.yml"
+
 [tasks."deploy:fileserver:zfs"]
 description = "Create ZFS datasets on bahamut"
 dir = "ansible"
