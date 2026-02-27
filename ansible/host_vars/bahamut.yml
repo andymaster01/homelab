@@ -7,3 +7,5 @@ zfs_datasets:
     path: /mnt/photos-videos
   - name: containers-data
     path: /mnt/containers-data
+  - name: photos-videos-test
+    path: /mnt/photos-videos-test
