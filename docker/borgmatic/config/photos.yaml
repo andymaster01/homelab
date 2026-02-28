@@ -1,0 +1,50 @@
+repositories:
+  - path: ssh://${HETZNER_BORGBACKUP_USER}@${HETZNER_BORGBACKUP_HOST}/./borgbackup/photos
+    label: hetzner-photos
+  - path: rclone:onedrive:borgbackup/photos
+    label: onedrive-photos
+
+source_directories:
+  - /mnt/source/pv/photos
+
+exclude_patterns:
+  - "*.DS_Store"
+  - "*/.Trash*"
+
+storage:
+  compression: none          # JPEG/HEIC/RAW already compressed — skip CPU waste
+  encryption_passphrase: ${BORG_PHOTOS_PASSPHRASE}
+  archive_name_format: "photos-{now:%Y-%m-%dT%H:%M:%S}"
+
+retention:
+  keep_daily: 7
+  keep_weekly: 4
+  keep_monthly: 12
+  keep_yearly: 3
+
+checks:
+  - name: repository
+    frequency: 1 week
+  - name: archives
+    frequency: 2 weeks
+  - name: extract
+    frequency: 1 month
+  - name: data
+    frequency: 3 months
+
+hooks:
+  after_backup:
+    # Sync plain files to OneDrive so they're browsable on the website
+    - rclone sync /mnt/source/pv/photos onedrive:Photos --transfers=4 --checkers=8
+
+  on_error:
+    - curl -fsS --retry 3 "${HEALTHCHECKS_PHOTOS_URL}/fail" > /dev/null
+
+  after_everything:
+    # Ping healthchecks.io on full success (create + checks passed)
+    - curl -fsS --retry 3 "${HEALTHCHECKS_PHOTOS_URL}" > /dev/null
+
+monitoring:
+  healthchecks:
+    ping_url: ${HEALTHCHECKS_PHOTOS_URL}
+    send_logs: true
