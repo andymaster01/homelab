@@ -21,7 +21,13 @@
       "Bash(git -C /Users/mauro/code/home-setup ls-files:*)",
       "WebSearch",
       "Bash(grep:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "WebFetch(domain:torsion.org)",
+      "WebFetch(domain:borgbackup.readthedocs.io)",
+      "WebFetch(domain:restic.readthedocs.io)",
+      "WebFetch(domain:creativeprojects.github.io)",
+      "WebFetch(domain:blog.cscholz.io)",
+      "WebFetch(domain:hub.docker.com)"
     ]
   }
 }
