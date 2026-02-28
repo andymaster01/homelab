@@ -1,6 +1,6 @@
 repositories:
-  - path: ssh://${HETZNER_BORGBACKUP_USER}@${HETZNER_BORGBACKUP_HOST}/./borgbackup/photos
-    label: hetzner-photos
+  # - path: ssh://${HETZNER_BORGBACKUP_USER}@${HETZNER_BORGBACKUP_HOST}/./borgbackup/photos
+  #   label: hetzner-photos
   - path: rclone:onedrive:borgbackup/photos
     label: onedrive-photos
 
