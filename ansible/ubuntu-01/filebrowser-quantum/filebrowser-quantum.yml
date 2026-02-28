@@ -6,9 +6,7 @@
   vars:
     state: present
     filebrowser_dir: /home/ubuntu/filebrowser-quantum
-    # PUID: "{{ lookup('env', 'PUID') }}"
-    # PGID: "{{ lookup('env', 'PGID') }}"
-    # TZ: "{{ lookup('env', 'TZ') }}"
+    project_root: "{{ playbook_dir }}/../../.."
 
   tasks:
     - name: Run docker compose down
@@ -28,7 +26,7 @@
 
     - name: Copy docker-compose.yml
       ansible.builtin.copy:
-        src: ../docker/filebrowser-quantum/docker-compose.yaml
+        src: "{{ project_root }}/docker/filebrowser-quantum/docker-compose.yaml"
         dest: "{{ filebrowser_dir }}/docker-compose.yaml"
         owner: ubuntu
         group: ubuntu
@@ -38,7 +36,7 @@
 
     - name: Copy config.yaml
       ansible.builtin.copy:
-        src: ../docker/filebrowser-quantum/config.yaml
+        src: "{{ project_root }}/docker/filebrowser-quantum/config.yaml"
         dest: "{{ filebrowser_dir }}/config.yaml"
         owner: ubuntu
         group: ubuntu

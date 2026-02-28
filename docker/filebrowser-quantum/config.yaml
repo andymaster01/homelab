@@ -1,5 +1,8 @@
 server:
   sources:
-    - path: /media # Do not use a root "/" directory or include the "/var" folder
+    - path: /media       
       config:
         defaultEnabled: true
+    - path: /photos-videos-test
+      config:
+          defaultEnabled: true

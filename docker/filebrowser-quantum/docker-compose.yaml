@@ -4,6 +4,7 @@ services:
     user: filebrowser
     volumes:
       - /mnt/media:/media # Do not use a root "/" directory or include the "/var" folder
+      - /mnt/photos-videos-test:/photos-videos-test
       - ./config.yaml:/home/filebrowser/config.yaml:ro
     ports:
       - 8010:80
