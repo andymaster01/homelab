@@ -45,6 +45,16 @@
       register: compose_file
       when: state == "present"
 
+    - name: Copy Dockerfile
+      ansible.builtin.copy:
+        src: "{{ project_root }}/docker/borgmatic/Dockerfile"
+        dest: "{{ borgmatic_dir }}/Dockerfile"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: dockerfile_file
+      when: state == "present"
+
     - name: Copy borgmatic config files
       ansible.builtin.copy:
         src: "{{ project_root }}/docker/borgmatic/config/{{ item }}"
@@ -54,7 +64,7 @@
         mode: "0644"
       loop:
         - photos.yaml
-        - videos.yaml
+        # - videos.yaml
       register: config_files
       when: state == "present"
 
@@ -103,11 +113,12 @@
 
     - name: Run docker compose up
       ansible.builtin.command:
-        cmd: docker compose up -d
+        cmd: docker compose up --build -d
         chdir: "{{ borgmatic_dir }}"
       when: >
         state == "present" and (
           compose_file.changed or
+          dockerfile_file.changed or
           config_files.changed or
           env_file.changed or
           ssh_key.changed or

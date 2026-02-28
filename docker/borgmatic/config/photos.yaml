@@ -44,7 +44,6 @@ hooks:
     # Ping healthchecks.io on full success (create + checks passed)
     - curl -fsS --retry 3 "${HEALTHCHECKS_PHOTOS_URL}" > /dev/null
 
-monitoring:
-  healthchecks:
-    ping_url: ${HEALTHCHECKS_PHOTOS_URL}
-    send_logs: true
+healthchecks:
+  ping_url: ${HEALTHCHECKS_PHOTOS_URL}
+  send_logs: true
