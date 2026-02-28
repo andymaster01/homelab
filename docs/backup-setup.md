@@ -88,3 +88,30 @@ restic -r rclone:onedrive:restic/videos init
 
 > The OneDrive checks cover both the restic backup and the rclone plain-file sync.
 > A failed rclone sync triggers the `/fail` ping, so one check covers both operations.
+
+## Step 7 — Restic Browser (optional, macOS)
+
+[Restic Browser](https://github.com/emuell/restic-browser) is a desktop GUI for browsing snapshots and restoring files. It connects to your existing repos without changing anything in the server setup.
+
+```bash
+brew install --cask restic-browser
+```
+
+**Connecting to an OneDrive repo:**
+
+1. Open Restic Browser
+2. Click **Open Repository**
+3. Set location to `rclone:onedrive:restic_backups/photos` (or `restic_backups/videos`)
+4. Set the password to your passphrase (`RESTIC_PHOTOS_PASSPHRASE` / `RESTIC_VIDEOS_PASSPHRASE`)
+5. Click **Open**
+
+> Requires rclone to be installed and the `onedrive` remote configured locally (done in Step 2).
+> Restic Browser uses whichever `rclone` is on your PATH, so the same config applies.
+
+**Connecting to a Hetzner repo:**
+
+1. Click **Open Repository**
+2. Set location to `sftp:u123456@u123456.your-storagebox.de:./restic/photos`
+3. Set the password to your passphrase
+4. Under **Environment**, add: `RESTIC_RSH=ssh -i ~/.ssh/restic_hetzner`
+5. Click **Open**

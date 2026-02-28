@@ -28,7 +28,8 @@
       "WebFetch(domain:creativeprojects.github.io)",
       "WebFetch(domain:blog.cscholz.io)",
       "WebFetch(domain:hub.docker.com)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(brew info:*)"
     ]
   }
 }
