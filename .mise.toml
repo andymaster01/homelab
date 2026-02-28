@@ -4,7 +4,7 @@ _.file = '.env'
 [task_config]
 includes = [
   "ansible/ubuntu-01/tasks.toml",
-  "ansible/ubuntu-01/borgmatic/tasks.toml",
+  "ansible/ubuntu-01/restic/tasks.toml",
   "ansible/ubuntu-01/filebrowser-quantum/tasks.toml"
 ]
 

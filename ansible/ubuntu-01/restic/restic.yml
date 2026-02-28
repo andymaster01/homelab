@@ -1,0 +1,103 @@
+---
+- name: Deploy Resticprofile
+  hosts: ubuntu-01
+  become: true
+
+  vars:
+    state: present
+    restic_dir: /home/ubuntu/resticprofile
+    RESTIC_PHOTOS_PASSPHRASE: "{{ lookup('env', 'RESTIC_PHOTOS_PASSPHRASE') }}"
+    RESTIC_VIDEOS_PASSPHRASE: "{{ lookup('env', 'RESTIC_VIDEOS_PASSPHRASE') }}"
+    HETZNER_SFTP_USER: "{{ lookup('env', 'HETZNER_SFTP_USER') }}"
+    HETZNER_SFTP_HOST: "{{ lookup('env', 'HETZNER_SFTP_HOST') }}"
+    HEALTHCHECKS_PHOTOS_URL: "{{ lookup('env', 'HEALTHCHECKS_PHOTOS_URL') }}"
+    HEALTHCHECKS_VIDEOS_URL: "{{ lookup('env', 'HEALTHCHECKS_VIDEOS_URL') }}"
+    project_root: "{{ playbook_dir }}/../../.."
+
+  tasks:
+    - name: Run docker compose down
+      ansible.builtin.command:
+        cmd: docker compose down
+        chdir: "{{ restic_dir }}"
+      when: state == "absent"
+
+    - name: Create resticprofile directory structure
+      ansible.builtin.file:
+        path: "{{ restic_dir }}/{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+      loop:
+        - ""
+        - ssh
+        - rclone
+      when: state == "present"
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.copy:
+        src: "{{ project_root }}/docker/restic/docker-compose.yml"
+        dest: "{{ restic_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: compose_file
+      when: state == "present"
+
+    - name: Copy resticprofile config
+      ansible.builtin.copy:
+        src: "{{ project_root }}/docker/restic/profiles.toml"
+        dest: "{{ restic_dir }}/profiles.toml"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: profiles_file
+      when: state == "present"
+
+    - name: Template .env file
+      ansible.builtin.template:
+        src: restic.env.j2
+        dest: "{{ restic_dir }}/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+      register: env_file
+      when: state == "present"
+
+    # SSH private key for Hetzner — base64-encoded in .env, decoded here
+    - name: Write SSH private key
+      ansible.builtin.copy:
+        content: "{{ lookup('env', 'RESTIC_SSH_PRIVATE_KEY') | b64decode }}"
+        dest: "{{ restic_dir }}/ssh/id_ed25519"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+      register: ssh_key
+      when: state == "present"
+
+    - name: Write SSH known_hosts for Hetzner
+      ansible.builtin.copy:
+        content: "{{ lookup('env', 'RESTIC_SSH_KNOWN_HOSTS') }}"
+        dest: "{{ restic_dir }}/ssh/known_hosts"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      register: known_hosts
+      when: state == "present"
+
+    # rclone.conf with OneDrive OAuth token — base64-encoded in .env
+    - name: Write rclone.conf
+      ansible.builtin.copy:
+        content: "{{ lookup('env', 'RESTIC_RCLONE_CONF') | b64decode }}"
+        dest: "{{ restic_dir }}/rclone/rclone.conf"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+      register: rclone_conf
+      when: state == "present"
+
+    - name: Run docker compose up
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ restic_dir }}"
+      when: state == "present"
