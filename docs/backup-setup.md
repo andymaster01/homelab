@@ -81,9 +81,9 @@ restic -r rclone:onedrive:restic/videos init
 
 | Variable | Check |
 |---|---|
-| `HEALTHCHECKS_PHOTOS_URL` | `restic-photos-hetzner` |
+| `HEALTHCHECKS_PHOTOS_HETZNER_URL` | `restic-photos-hetzner` |
 | `HEALTHCHECKS_PHOTOS_ONEDRIVE_URL` | `restic-photos-onedrive` |
-| `HEALTHCHECKS_VIDEOS_URL` | `restic-videos-hetzner` |
+| `HEALTHCHECKS_VIDEOS_HETZNER_URL` | `restic-videos-hetzner` |
 | `HEALTHCHECKS_VIDEOS_ONEDRIVE_URL` | `restic-videos-onedrive` |
 
 > The OneDrive checks cover both the restic backup and the rclone plain-file sync.

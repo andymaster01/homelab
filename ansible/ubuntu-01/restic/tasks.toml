@@ -18,5 +18,5 @@ description = "Tail Resticprofile logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/resticprofile/docker-compose.yml logs -f'"
 
 ["deploy:restic:run"]
-description = "Trigger a manual backup run now (all profiles)"
-run = "ssh ubuntu@192.168.1.130 'docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml run-schedule --all backup'"
+description = "Trigger a manual backup run now (photos-onedrive)"
+run = "ssh ubuntu@192.168.1.130 'docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml -n photos-onedrive backup'"

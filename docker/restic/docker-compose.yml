@@ -14,7 +14,8 @@ services:
       - ./ssh:/root/.ssh:ro
 
       # rclone config with OneDrive OAuth token (used for restic rclone backend + plain sync)
-      - ./rclone:/root/.config/rclone:ro
+      # Must be read-write so rclone can persist refreshed OAuth tokens
+      - ./rclone:/root/.config/rclone
 
       # Local restic cache — rebuildable, speeds up incremental runs
       - restic_cache:/root/.cache/restic
@@ -27,9 +28,9 @@ services:
       RESTIC_VIDEOS_PASSPHRASE: ${RESTIC_VIDEOS_PASSPHRASE}
       HETZNER_SFTP_USER: ${HETZNER_SFTP_USER}
       HETZNER_SFTP_HOST: ${HETZNER_SFTP_HOST}
-      HEALTHCHECKS_PHOTOS_URL: ${HEALTHCHECKS_PHOTOS_URL}
+      HEALTHCHECKS_PHOTOS_HETZNER_URL: ${HEALTHCHECKS_PHOTOS_HETZNER_URL}
       HEALTHCHECKS_PHOTOS_ONEDRIVE_URL: ${HEALTHCHECKS_PHOTOS_ONEDRIVE_URL}
-      HEALTHCHECKS_VIDEOS_URL: ${HEALTHCHECKS_VIDEOS_URL}
+      HEALTHCHECKS_VIDEOS_HETZNER_URL: ${HEALTHCHECKS_VIDEOS_HETZNER_URL}
       HEALTHCHECKS_VIDEOS_ONEDRIVE_URL: ${HEALTHCHECKS_VIDEOS_ONEDRIVE_URL}
 
 volumes:

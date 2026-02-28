@@ -24,19 +24,20 @@ RCLONE_CONFIG = "/root/.config/rclone/rclone.conf"
 # [photos-hetzner.backup]
 # source = ["/mnt/source/pv/photos"]
 # exclude = ["*.DS_Store", "*/.Trash*"]
-# schedule = "0 2 * * *"
+# schedule = "02:00"
+# schedule-permission = "system"
 # tag = ["photos"]
 #
 # [[photos-hetzner.backup.send-before]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_URL }}/start"
+# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}/start"
 # method = "HEAD"
 #
 # [[photos-hetzner.backup.send-after]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_URL }}"
+# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}"
 # method = "HEAD"
 #
 # [[photos-hetzner.backup.send-after-fail]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_URL }}/fail"
+# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}/fail"
 # method = "HEAD"
 #
 # [photos-hetzner.forget]
@@ -45,16 +46,18 @@ RCLONE_CONFIG = "/root/.config/rclone/rclone.conf"
 # keep-monthly = 12
 # keep-yearly = 3
 # prune = true
-# schedule = "15 2 * * *"
+# schedule = "02:15"
+# schedule-permission = "system"
 #
 # [photos-hetzner.check]
 # read-data-subset = "5%"
-# schedule = "0 4 * * 0"
+# schedule = "Sun 04:00"
+# schedule-permission = "system"
 
 # Photos → OneDrive (rclone) — secondary disaster recovery + plain file sync
 [photos-onedrive]
 inherit = "default"
-repository = "rclone:onedrive:restic/photos"
+repository = "rclone:onedrive:restic_backups/photos"
 
 [photos-onedrive.env]
 RESTIC_PASSWORD = "{{ .Env.RESTIC_PHOTOS_PASSPHRASE }}"
@@ -62,9 +65,10 @@ RESTIC_PASSWORD = "{{ .Env.RESTIC_PHOTOS_PASSPHRASE }}"
 [photos-onedrive.backup]
 source = ["/mnt/source/pv/photos"]
 exclude = ["*.DS_Store", "*/.Trash*"]
-schedule = "30 2 * * *"
+schedule = "02:30"
+schedule-permission = "system"
 tag = ["photos"]
-run-after = ["rclone sync /mnt/source/pv/photos onedrive:Photos --transfers=4 --checkers=8"]
+run-after = ["rclone sync /mnt/source/pv/photos onedrive:PhotosPlain --transfers=4 --checkers=8"]
 
 [[photos-onedrive.backup.send-before]]
 url = "{{ .Env.HEALTHCHECKS_PHOTOS_ONEDRIVE_URL }}/start"
@@ -84,11 +88,13 @@ keep-weekly = 4
 keep-monthly = 12
 keep-yearly = 3
 prune = true
-schedule = "45 2 * * *"
+schedule = "02:45"
+schedule-permission = "system"
 
 [photos-onedrive.check]
 read-data-subset = "5%"
-schedule = "0 5 * * 0"
+schedule = "Sun 05:00"
+schedule-permission = "system"
 
 # ============================================================
 # Videos — DISABLED — enable once photos are stable
@@ -106,19 +112,20 @@ schedule = "0 5 * * 0"
 # [videos-hetzner.backup]
 # source = ["/mnt/source/pv/videos"]
 # exclude = ["*.DS_Store", "*/.Trash*"]
-# schedule = "0 3 * * *"
+# schedule = "03:00"
+# schedule-permission = "system"
 # tag = ["videos"]
 #
 # [[videos-hetzner.backup.send-before]]
-# url = "{{ .Env.HEALTHCHECKS_VIDEOS_URL }}/start"
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}/start"
 # method = "HEAD"
 #
 # [[videos-hetzner.backup.send-after]]
-# url = "{{ .Env.HEALTHCHECKS_VIDEOS_URL }}"
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}"
 # method = "HEAD"
 #
 # [[videos-hetzner.backup.send-after-fail]]
-# url = "{{ .Env.HEALTHCHECKS_VIDEOS_URL }}/fail"
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}/fail"
 # method = "HEAD"
 #
 # [videos-hetzner.forget]
@@ -126,11 +133,13 @@ schedule = "0 5 * * 0"
 # keep-weekly = 4
 # keep-monthly = 6
 # prune = true
-# schedule = "15 3 * * *"
+# schedule = "03:15"
+# schedule-permission = "system"
 #
 # [videos-hetzner.check]
 # read-data-subset = "5%"
-# schedule = "30 4 * * 0"
+# schedule = "Sun 04:30"
+# schedule-permission = "system"
 
 # Videos → OneDrive (rclone) — secondary disaster recovery + plain file sync
 #
@@ -144,7 +153,8 @@ schedule = "0 5 * * 0"
 # [videos-onedrive.backup]
 # source = ["/mnt/source/pv/videos"]
 # exclude = ["*.DS_Store", "*/.Trash*"]
-# schedule = "30 3 * * *"
+# schedule = "03:30"
+# schedule-permission = "system"
 # tag = ["videos"]
 # run-after = ["rclone sync /mnt/source/pv/videos onedrive:Videos --transfers=2 --checkers=4"]
 #
@@ -165,8 +175,10 @@ schedule = "0 5 * * 0"
 # keep-weekly = 4
 # keep-monthly = 6
 # prune = true
-# schedule = "45 3 * * *"
+# schedule = "03:45"
+# schedule-permission = "system"
 #
 # [videos-onedrive.check]
 # read-data-subset = "5%"
-# schedule = "30 5 * * 0"
+# schedule = "Sun 05:30"
+# schedule-permission = "system"

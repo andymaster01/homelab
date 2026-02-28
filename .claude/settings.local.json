@@ -27,7 +27,8 @@
       "WebFetch(domain:restic.readthedocs.io)",
       "WebFetch(domain:creativeprojects.github.io)",
       "WebFetch(domain:blog.cscholz.io)",
-      "WebFetch(domain:hub.docker.com)"
+      "WebFetch(domain:hub.docker.com)",
+      "Bash(ssh:*)"
     ]
   }
 }
