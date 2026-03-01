@@ -4,6 +4,7 @@ _.file = '.env'
 [task_config]
 includes = [
   "ansible/roles/filebrowser_quantum/mise-tasks.toml",
+  "ansible/roles/fileserver_zfs/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -98,11 +99,6 @@ run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic -e state=absent"
 description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"
 dir = "ansible"
 run = "ansible-playbook playbooks/bahamut.yml"
-
-[tasks."deploy:fileserver:zfs"]
-description = "Create ZFS datasets on bahamut"
-dir = "ansible"
-run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_zfs"
 
 [tasks."deploy:fileserver:nfs"]
 description = "Configure NFS file server on bahamut"
