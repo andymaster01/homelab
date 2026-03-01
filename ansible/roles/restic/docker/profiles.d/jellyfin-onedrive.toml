@@ -11,7 +11,12 @@ repository = "rclone:onedrive:restic_backups/jellyfin"
 RESTIC_PASSWORD = "{{ .Env.RESTIC_JELLYFIN_PASSPHRASE }}"
 
 [jellyfin-onedrive.backup]
-source = ["/mnt/source/jellyfin"]
+source = ["/mnt/source/backups/jellyfin"]
+run-before = [
+  "curl -sf -X POST http://host-gateway:8096/Backup/Create -H 'Authorization: MediaBrowser Token=\"{{ .Env.JELLYFIN_API_KEY }}\"' -H 'Content-Type: application/json' -d '{}'"
+]
+# run-after = ["rm -f /mnt/source/backups/jellyfin/*.zip"]
+# run-after-fail = ["rm -f /mnt/source/backups/jellyfin/*.zip"]
 schedule = "04:00"
 schedule-permission = "system"
 tag = ["jellyfin"]

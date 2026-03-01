@@ -14,6 +14,7 @@ services:
       - jellyfin_config:/config
       - jellyfin_cache:/cache
       - /mnt/media:/media:ro
+      - /mnt/containers-data/backups/jellyfin:/config/data/backups
 
     environment:
       PUID: ${PUID}

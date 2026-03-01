@@ -1,6 +1,7 @@
 ---
 state: present
 jellyfin_dir: /home/ubuntu/jellyfin
+jellyfin_backup_dir: /mnt/containers-data/backups/jellyfin
 PUID: "{{ lookup('env', 'PUID') }}"
 PGID: "{{ lookup('env', 'PGID') }}"
 TZ: "{{ lookup('env', 'TZ') }}"

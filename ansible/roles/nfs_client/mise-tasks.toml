@@ -1,3 +1,8 @@
+["nfs_client:deploy"]
+description = "Deploy NFS client role on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags nfs_client"
+
 ["nfs_client:status"]
 description = "Check NFS mount status on ubuntu-01"
 dir = "ansible"

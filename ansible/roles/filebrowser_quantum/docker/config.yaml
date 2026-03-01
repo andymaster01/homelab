@@ -1,8 +1,18 @@
 server:
   sources:
+
     - path: /media       
       config:
         defaultEnabled: true
+
+    - path: /photos-videos
+      config: 
+        defaultEnabled: true
+    
     - path: /photos-videos-test
+      config:
+          defaultEnabled: true
+    
+    - path: /containers-data
       config:
           defaultEnabled: true

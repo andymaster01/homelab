@@ -34,6 +34,15 @@
   register: env_file
   when: state == "present"
 
+- name: Create jellyfin backup directory
+  ansible.builtin.file:
+    path: "{{ jellyfin_backup_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
 - name: Run docker compose up
   ansible.builtin.command:
     cmd: docker compose up -d

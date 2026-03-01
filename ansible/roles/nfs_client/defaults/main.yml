@@ -3,3 +3,5 @@ nfs_server: 192.168.1.101
 nfs_mounts:
   - /mnt/photos-videos-test
   - /mnt/media
+  - /mnt/containers-data
+  - /mnt/photos-videos

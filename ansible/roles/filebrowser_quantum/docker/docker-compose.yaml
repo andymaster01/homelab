@@ -3,8 +3,10 @@ services:
     image: gtstef/filebrowser:stable
     user: filebrowser
     volumes:
-      - /mnt/media:/media # Do not use a root "/" directory or include the "/var" folder
+      - /mnt/media:/media 
+      - /mnt/photos-videos:/photos-videos
       - /mnt/photos-videos-test:/photos-videos-test
+      - /mnt/containers-data:/containers-data
       - ./config.yaml:/home/filebrowser/config.yaml:ro
     ports:
       - 8010:80

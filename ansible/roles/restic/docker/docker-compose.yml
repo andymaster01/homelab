@@ -24,8 +24,11 @@ services:
       # Source: entire photos-videos NFS dataset (read-only)
       - /mnt/photos-videos-test:/mnt/source/pv:ro
 
-      # Source: Jellyfin config volume (read-only)
-      - jellyfin_jellyfin_config:/mnt/source/jellyfin:ro
+      # Source: Backups root (read-only)
+      - /mnt/containers-data/backups:/mnt/source/backups:ro
+
+    extra_hosts:
+      - "host-gateway:host-gateway"
 
     environment:
       RESTIC_PHOTOS_PASSPHRASE: ${RESTIC_PHOTOS_PASSPHRASE}
@@ -38,9 +41,8 @@ services:
       HEALTHCHECKS_VIDEOS_ONEDRIVE_URL: ${HEALTHCHECKS_VIDEOS_ONEDRIVE_URL}
       RESTIC_JELLYFIN_PASSPHRASE: ${RESTIC_JELLYFIN_PASSPHRASE}
       HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL: ${HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY}
 
 volumes:
   restic_cache:
     driver: local
-  jellyfin_jellyfin_config:
-    external: true

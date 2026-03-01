@@ -38,4 +38,4 @@
   ansible.builtin.command:
     cmd: docker compose up -d
     chdir: "{{ filebrowser_dir }}"
-  when: state == "present" and (compose_file.changed or config_file.changed)
+  when: state == "present"
