@@ -29,7 +29,8 @@
       "WebFetch(domain:blog.cscholz.io)",
       "WebFetch(domain:hub.docker.com)",
       "Bash(ssh:*)",
-      "Bash(brew info:*)"
+      "Bash(brew info:*)",
+      "Bash(cp:*)"
     ]
   }
 }
