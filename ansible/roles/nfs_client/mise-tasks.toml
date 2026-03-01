@@ -1,0 +1,4 @@
+["nfs_client:status"]
+description = "Check NFS mount status on ubuntu-01"
+dir = "ansible"
+run = "ansible app_servers -m shell -a 'mount | grep nfs' --become"

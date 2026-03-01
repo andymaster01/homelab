@@ -9,6 +9,7 @@ includes = [
   "ansible/roles/fileserver_samba/mise-tasks.toml",
   "ansible/roles/homepage/mise-tasks.toml",
   "ansible/roles/jellyfin/mise-tasks.toml",
+  "ansible/roles/nfs_client/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -70,8 +71,3 @@ run = "ansible-playbook playbooks/bahamut.yml"
 description = "Check Samba and NFS status on bahamut"
 dir = "ansible"
 run = "ansible file_servers -m shell -a 'systemctl status smbd nfs-kernel-server --no-pager' --become"
-
-[tasks."deploy:nfs:status"]
-description = "Check NFS mount status on ubuntu-01"
-dir = "ansible"
-run = "ansible app_servers -m shell -a 'mount | grep nfs' --become"

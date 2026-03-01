@@ -1,0 +1,22 @@
+---
+- name: Install nfs-common
+  ansible.builtin.apt:
+    name: nfs-common
+    update_cache: true
+
+- name: Create NFS mount point directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+  loop: "{{ nfs_mounts }}"
+
+- name: Mount NFS shares
+  ansible.posix.mount:
+    src: "{{ nfs_server }}:{{ item }}"
+    path: "{{ item }}"
+    fstype: nfs
+    opts: "rw,sync,hard,intr,timeo=30,_netdev"
+    state: mounted
+  loop: "{{ nfs_mounts }}"
