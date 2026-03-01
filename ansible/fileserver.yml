@@ -1,4 +1,0 @@
----
-- import_playbook: fileserver-zfs.yml
-- import_playbook: fileserver-nfs.yml
-- import_playbook: fileserver-samba.yml
