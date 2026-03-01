@@ -1,0 +1,9 @@
+["fileserver:samba:setup"]
+description = "Configure Samba file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba"
+
+["fileserver:samba:remove"]
+description = "Remove Samba from bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba -e state=absent"

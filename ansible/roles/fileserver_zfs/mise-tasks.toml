@@ -1,4 +1,4 @@
-["fileserver:deploy:zfs"]
+["fileserver:zfs:setup"]
 description = "Create ZFS datasets on bahamut"
 dir = "ansible"
 run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_zfs"

@@ -1,0 +1,4 @@
+---
+state: present
+smb_user: "{{ lookup('env', 'FILESERVER_SMB_USER') }}"
+smb_pass: "{{ lookup('env', 'FILESERVER_SMB_PASS') }}"

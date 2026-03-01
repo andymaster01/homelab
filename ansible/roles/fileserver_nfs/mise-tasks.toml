@@ -1,0 +1,9 @@
+["fileserver:nfs:setup"]
+description = "Configure NFS file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs"
+
+["fileserver:nfs:remove"]
+description = "Remove NFS from bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs -e state=absent"

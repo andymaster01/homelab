@@ -1,0 +1,60 @@
+---
+# ── state=present ──────────────────────────────────────────
+- name: Install Samba
+  ansible.builtin.apt:
+    name: samba
+    state: present
+    update_cache: true
+  when: state == "present"
+
+- name: Template smb.conf
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Samba
+  when: state == "present"
+
+- name: Ensure system user exists
+  ansible.builtin.user:
+    name: "{{ smb_user }}"
+    shell: /usr/sbin/nologin
+    create_home: false
+  when: state == "present"
+
+- name: Create Samba user
+  ansible.builtin.shell: |
+    (echo '{{ smb_pass }}'; echo '{{ smb_pass }}') | smbpasswd -s -a {{ smb_user }}
+  changed_when: false
+  when: state == "present"
+
+- name: Enable and start Samba services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - smbd
+    - nmbd
+  when: state == "present"
+
+# ── state=absent ───────────────────────────────────────────
+- name: Stop and disable Samba services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - smbd
+    - nmbd
+  when: state == "absent"
+  ignore_errors: true
+
+- name: Purge Samba packages
+  ansible.builtin.apt:
+    name: samba
+    state: absent
+    purge: true
+  when: state == "absent"

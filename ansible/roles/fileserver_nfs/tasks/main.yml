@@ -1,0 +1,41 @@
+---
+# ── state=present ──────────────────────────────────────────
+- name: Install NFS server
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+    update_cache: true
+  when: state == "present"
+
+- name: Template NFS exports
+  ansible.builtin.template:
+    src: nfs_exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Re-export NFS
+  when: state == "present"
+
+- name: Enable and start NFS server
+  ansible.builtin.systemd:
+    name: nfs-kernel-server
+    enabled: true
+    state: started
+  when: state == "present"
+
+# ── state=absent ───────────────────────────────────────────
+- name: Stop and disable NFS server
+  ansible.builtin.systemd:
+    name: nfs-kernel-server
+    enabled: false
+    state: stopped
+  when: state == "absent"
+  ignore_errors: true
+
+- name: Purge NFS packages
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: absent
+    purge: true
+  when: state == "absent"

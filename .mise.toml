@@ -5,6 +5,8 @@ _.file = '.env'
 includes = [
   "ansible/roles/filebrowser_quantum/mise-tasks.toml",
   "ansible/roles/fileserver_zfs/mise-tasks.toml",
+  "ansible/roles/fileserver_nfs/mise-tasks.toml",
+  "ansible/roles/fileserver_samba/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -99,26 +101,6 @@ run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic -e state=absent"
 description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"
 dir = "ansible"
 run = "ansible-playbook playbooks/bahamut.yml"
-
-[tasks."deploy:fileserver:nfs"]
-description = "Configure NFS file server on bahamut"
-dir = "ansible"
-run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs"
-
-[tasks."deploy:fileserver:nfs:down"]
-description = "Remove NFS from bahamut"
-dir = "ansible"
-run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs -e state=absent"
-
-[tasks."deploy:fileserver:samba"]
-description = "Configure Samba file server on bahamut"
-dir = "ansible"
-run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba"
-
-[tasks."deploy:fileserver:samba:down"]
-description = "Remove Samba from bahamut"
-dir = "ansible"
-run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba -e state=absent"
 
 [tasks."deploy:fileserver:status"]
 description = "Check Samba and NFS status on bahamut"
