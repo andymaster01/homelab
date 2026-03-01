@@ -1,0 +1,42 @@
+# ============================================================
+# Jellyfin
+# ============================================================
+
+# Jellyfin config → OneDrive (full config volume: DB, plugins, metadata, settings)
+[jellyfin-onedrive]
+inherit = "default"
+repository = "rclone:onedrive:restic_backups/jellyfin"
+
+[jellyfin-onedrive.env]
+RESTIC_PASSWORD = "{{ .Env.RESTIC_JELLYFIN_PASSPHRASE }}"
+
+[jellyfin-onedrive.backup]
+source = ["/mnt/source/jellyfin"]
+schedule = "04:00"
+schedule-permission = "system"
+tag = ["jellyfin"]
+
+[[jellyfin-onedrive.backup.send-before]]
+url = "{{ .Env.HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL }}/start"
+method = "HEAD"
+
+[[jellyfin-onedrive.backup.send-after]]
+url = "{{ .Env.HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL }}"
+method = "HEAD"
+
+[[jellyfin-onedrive.backup.send-after-fail]]
+url = "{{ .Env.HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL }}/fail"
+method = "HEAD"
+
+[jellyfin-onedrive.forget]
+keep-daily = 7
+keep-weekly = 4
+keep-monthly = 6
+prune = true
+schedule = "04:15"
+schedule-permission = "system"
+
+[jellyfin-onedrive.check]
+read-data-subset = "5%"
+schedule = "Sun 06:00"
+schedule-permission = "system"

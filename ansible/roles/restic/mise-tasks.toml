@@ -16,3 +16,17 @@ run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/resticp
 ["restic:logs"]
 description = "Tail Resticprofile logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/resticprofile/docker-compose.yml logs -f'"
+
+["restic:init"]
+description = "Initialize a restic repository for a given profile on ubuntu-01 (idempotent)"
+usage = 'arg "<profile>" help="Resticprofile profile name (e.g. jellyfin-onedrive)"'
+run = """
+ssh ubuntu@192.168.1.130 "
+  if docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml --name '${usage_profile?}' snapshots > /dev/null 2>&1; then
+    echo 'Repository for profile ${usage_profile?} already exists, skipping init.'
+  else
+    echo 'Initializing repository for profile ${usage_profile?}...'
+    docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml --name '${usage_profile?}' init
+  fi
+"
+"""

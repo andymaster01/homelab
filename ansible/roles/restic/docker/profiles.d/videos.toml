@@ -1,0 +1,86 @@
+# ============================================================
+# Videos — DISABLED — enable once photos are stable
+# ============================================================
+
+# Videos → Hetzner Storage Box (SFTP) — primary disaster recovery
+#
+# [videos-hetzner]
+# inherit = "default"
+# repository = "sftp:{{ .Env.HETZNER_SFTP_USER }}@{{ .Env.HETZNER_SFTP_HOST }}:./restic/videos"
+#
+# [videos-hetzner.env]
+# RESTIC_PASSWORD = "{{ .Env.RESTIC_VIDEOS_PASSPHRASE }}"
+#
+# [videos-hetzner.backup]
+# source = ["/mnt/source/pv/videos"]
+# exclude = ["*.DS_Store", "*/.Trash*"]
+# schedule = "03:00"
+# schedule-permission = "system"
+# tag = ["videos"]
+#
+# [[videos-hetzner.backup.send-before]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}/start"
+# method = "HEAD"
+#
+# [[videos-hetzner.backup.send-after]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}"
+# method = "HEAD"
+#
+# [[videos-hetzner.backup.send-after-fail]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_HETZNER_URL }}/fail"
+# method = "HEAD"
+#
+# [videos-hetzner.forget]
+# keep-daily = 7
+# keep-weekly = 4
+# keep-monthly = 6
+# prune = true
+# schedule = "03:15"
+# schedule-permission = "system"
+#
+# [videos-hetzner.check]
+# read-data-subset = "5%"
+# schedule = "Sun 04:30"
+# schedule-permission = "system"
+
+# Videos → OneDrive (rclone) — secondary disaster recovery + plain file sync
+#
+# [videos-onedrive]
+# inherit = "default"
+# repository = "rclone:onedrive:restic/videos"
+#
+# [videos-onedrive.env]
+# RESTIC_PASSWORD = "{{ .Env.RESTIC_VIDEOS_PASSPHRASE }}"
+#
+# [videos-onedrive.backup]
+# source = ["/mnt/source/pv/videos"]
+# exclude = ["*.DS_Store", "*/.Trash*"]
+# schedule = "03:30"
+# schedule-permission = "system"
+# tag = ["videos"]
+# run-after = ["rclone sync /mnt/source/pv/videos onedrive:Videos --transfers=2 --checkers=4"]
+#
+# [[videos-onedrive.backup.send-before]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}/start"
+# method = "HEAD"
+#
+# [[videos-onedrive.backup.send-after]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}"
+# method = "HEAD"
+#
+# [[videos-onedrive.backup.send-after-fail]]
+# url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}/fail"
+# method = "HEAD"
+#
+# [videos-onedrive.forget]
+# keep-daily = 7
+# keep-weekly = 4
+# keep-monthly = 6
+# prune = true
+# schedule = "03:45"
+# schedule-permission = "system"
+#
+# [videos-onedrive.check]
+# read-data-subset = "5%"
+# schedule = "Sun 05:30"
+# schedule-permission = "system"

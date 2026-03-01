@@ -10,10 +10,14 @@ Source files (ubuntu-01 NFS mount)
     │
     └──► Hetzner Storage Box — restic repo (sftp:u123456@.../restic/photos)
          [disabled — enable once OneDrive is stable]
+
+jellyfin_config Docker volume (ubuntu-01)
+    │
+    └──► OneDrive — restic repo (rclone:onedrive:restic_backups/jellyfin)
 ```
 
-**Active profiles:** `photos-onedrive` only. Videos and Hetzner profiles are disabled
-and will be enabled progressively.
+**Active profiles:** `photos-onedrive`, `jellyfin-onedrive`. Videos and Hetzner profiles
+are disabled and will be enabled progressively.
 
 **Schedule (photos-onedrive):**
 
@@ -24,6 +28,16 @@ and will be enabled progressively.
 | Sun 05:00 | check (verify 5% of repo data) |
 
 **Retention:** 7 daily, 4 weekly, 12 monthly, 3 yearly.
+
+**Schedule (jellyfin-onedrive):**
+
+| Time | Job |
+|---|---|
+| 04:00 daily | backup |
+| 04:15 daily | forget (prune old snapshots) |
+| Sun 06:00 | check (verify 5% of repo data) |
+
+**Retention:** 7 daily, 4 weekly, 6 monthly.
 
 ---
 
@@ -135,11 +149,47 @@ For browsing and selective file restore without the CLI, use
 
 ---
 
+## Restore Jellyfin
+
+Jellyfin stores its entire state (SQLite database, plugins, metadata, settings) in the
+`jellyfin_config` Docker named volume, which is backed up as-is. Restore procedure:
+
+```bash
+# 1. Stop Jellyfin on ubuntu-01
+ssh ubuntu@192.168.1.130 'docker stop jellyfin'
+
+# 2. List available snapshots
+RESTIC_PASSWORD="your-jellyfin-passphrase" \
+  restic -r rclone:onedrive:restic_backups/jellyfin snapshots
+
+# 3. Restore to a temp directory on ubuntu-01
+ssh ubuntu@192.168.1.130 \
+  'RESTIC_PASSWORD="your-jellyfin-passphrase" \
+   restic -r rclone:onedrive:restic_backups/jellyfin restore latest \
+   --target /tmp/jellyfin-restore'
+
+# 4. Copy restored files back into the jellyfin_config Docker volume
+ssh ubuntu@192.168.1.130 \
+  'docker run --rm \
+     -v jellyfin_config:/config \
+     -v /tmp/jellyfin-restore/mnt/source/jellyfin:/restore:ro \
+     alpine sh -c "cp -r /restore/. /config/"'
+
+# 5. Restart Jellyfin
+ssh ubuntu@192.168.1.130 'docker start jellyfin'
+```
+
+You can also use **Restic Browser** (macOS GUI) to browse snapshots and extract
+individual files — useful for recovering a single config file without a full restore.
+
+---
+
 ## Passwords
 
-Both passphrases are in your password manager:
+Passphrases are in your password manager:
 - `RESTIC_PHOTOS_PASSPHRASE` — photos repos (both Hetzner and OneDrive)
 - `RESTIC_VIDEOS_PASSPHRASE` — videos repos (both Hetzner and OneDrive)
+- `RESTIC_JELLYFIN_PASSPHRASE` — Jellyfin config repo (OneDrive)
 
 > Unlike borg, restic derives the encryption key directly from the password.
 > There is no separate key file to export or back up.
@@ -173,6 +223,10 @@ Source files (ubuntu-01)
     ├──► videos-hetzner  ──► Sun 04:30 check
     └──► videos-onedrive ──► Sun 05:30 check
               └──► plain-file sync → onedrive:Videos
+
+jellyfin_config volume (ubuntu-01)
+    │
+    └──► jellyfin-onedrive ──► Sun 06:00 check
 ```
 
 You have (once fully enabled):

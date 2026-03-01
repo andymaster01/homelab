@@ -38,6 +38,23 @@
   register: profiles_file
   when: state == "present"
 
+- name: Create resticprofile profiles.d directory
+  ansible.builtin.file:
+    path: "{{ restic_dir }}/profiles.d"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Copy resticprofile profile files
+  ansible.posix.synchronize:
+    src: "{{ role_path }}/docker/profiles.d/"
+    dest: "{{ restic_dir }}/profiles.d/"
+    delete: true
+  register: profiles_dir
+  when: state == "present"
+
 - name: Template .env file
   ansible.builtin.template:
     src: env.j2

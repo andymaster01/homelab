@@ -9,6 +9,7 @@ services:
     volumes:
       # Resticprofile config
       - ./profiles.toml:/etc/resticprofile/profiles.toml:ro
+      - ./profiles.d:/etc/resticprofile/profiles.d:ro
 
       # SSH key for Hetzner Storage Box (SFTP backend)
       - ./ssh:/root/.ssh:ro
@@ -23,6 +24,9 @@ services:
       # Source: entire photos-videos NFS dataset (read-only)
       - /mnt/photos-videos-test:/mnt/source/pv:ro
 
+      # Source: Jellyfin config volume (read-only)
+      - jellyfin_jellyfin_config:/mnt/source/jellyfin:ro
+
     environment:
       RESTIC_PHOTOS_PASSPHRASE: ${RESTIC_PHOTOS_PASSPHRASE}
       RESTIC_VIDEOS_PASSPHRASE: ${RESTIC_VIDEOS_PASSPHRASE}
@@ -32,7 +36,11 @@ services:
       HEALTHCHECKS_PHOTOS_ONEDRIVE_URL: ${HEALTHCHECKS_PHOTOS_ONEDRIVE_URL}
       HEALTHCHECKS_VIDEOS_HETZNER_URL: ${HEALTHCHECKS_VIDEOS_HETZNER_URL}
       HEALTHCHECKS_VIDEOS_ONEDRIVE_URL: ${HEALTHCHECKS_VIDEOS_ONEDRIVE_URL}
+      RESTIC_JELLYFIN_PASSPHRASE: ${RESTIC_JELLYFIN_PASSPHRASE}
+      HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL: ${HEALTHCHECKS_JELLYFIN_ONEDRIVE_URL}
 
 volumes:
   restic_cache:
     driver: local
+  jellyfin_jellyfin_config:
+    external: true
