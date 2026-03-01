@@ -7,6 +7,7 @@ includes = [
   "ansible/roles/fileserver_zfs/mise-tasks.toml",
   "ansible/roles/fileserver_nfs/mise-tasks.toml",
   "ansible/roles/fileserver_samba/mise-tasks.toml",
+  "ansible/roles/homepage/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -67,25 +68,6 @@ run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/jellyfi
 [tasks."deploy:jellyfin:logs"]
 description = "Tail Jellyfin logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"
-
-[tasks."deploy:homepage"]
-description = "Deploy Homepage to ubuntu-01 via Ansible"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags homepage"
-
-[tasks."deploy:homepage:down"]
-description = "Stop and remove Homepage containers on ubuntu-01"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags homepage -e state=absent"
-
-[tasks."deploy:homepage:status"]
-description = "Check Homepage container status on ubuntu-01"
-dir = "ansible"
-run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/homepage/docker-compose.yml ps'"
-
-[tasks."deploy:homepage:logs"]
-description = "Tail Homepage logs on ubuntu-01"
-run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/homepage/docker-compose.yml logs -f'"
 
 [tasks."deploy:restic"]
 description = "Deploy Resticprofile to ubuntu-01 via Ansible"

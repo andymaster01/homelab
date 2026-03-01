@@ -1,0 +1,12 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "*"
+      PUID: 1000 
+      PGID: 100 
+    ports:
+      - 80:3000
+    volumes:
+      - /home/ubuntu/homepage/config:/app/config
+    restart: unless-stopped
