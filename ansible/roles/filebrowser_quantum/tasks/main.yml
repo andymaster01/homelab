@@ -1,0 +1,41 @@
+---
+- name: Run docker compose down
+  ansible.builtin.command:
+    cmd: docker compose down
+    chdir: "{{ filebrowser_dir }}"
+  when: state == "absent"
+
+- name: Create filebrowser directory
+  ansible.builtin.file:
+    path: "{{ filebrowser_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Copy docker-compose.yaml
+  ansible.builtin.copy:
+    src: "{{ role_path }}/docker/docker-compose.yaml"
+    dest: "{{ filebrowser_dir }}/docker-compose.yaml"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  register: compose_file
+  when: state == "present"
+
+- name: Copy config.yaml
+  ansible.builtin.copy:
+    src: "{{ role_path }}/docker/config.yaml"
+    dest: "{{ filebrowser_dir }}/config.yaml"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  register: config_file
+  when: state == "present"
+
+- name: Run docker compose up
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ filebrowser_dir }}"
+  when: state == "present" and (compose_file.changed or config_file.changed)

@@ -1,0 +1,13 @@
+---
+- hosts: app_servers
+  become: true
+  roles:
+    - role: nfs_client
+    - role: jellyfin
+      tags: jellyfin
+    - role: homepage
+      tags: homepage
+    - role: filebrowser_quantum
+      tags: filebrowser_quantum
+    - role: restic
+      tags: restic

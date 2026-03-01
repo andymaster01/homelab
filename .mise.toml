@@ -3,9 +3,7 @@ _.file = '.env'
 
 [task_config]
 includes = [
-  "ansible/ubuntu-01/tasks.toml",
-  "ansible/ubuntu-01/restic/tasks.toml",
-  "ansible/ubuntu-01/filebrowser-quantum/tasks.toml"
+  "ansible/roles/filebrowser_quantum/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -48,86 +46,90 @@ description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
 
-[tasks."deploy:nfs:down"]
-description = "Unmount NFS share on ubuntu-01"
-dir = "ansible"
-run = "ansible-playbook nfs.yml -e state=absent"
-
-[tasks."deploy:nfs:status"]
-description = "Check NFS mount status on ubuntu-01"
-dir = "ansible"
-run = "ansible ubuntu-01 -m shell -a 'mount | grep nfs' --become"
-
 [tasks."deploy:jellyfin"]
 description = "Deploy Jellyfin to ubuntu-01 via Ansible"
 dir = "ansible"
-run = "ansible-playbook jellyfin.yml"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin"
 
 [tasks."deploy:jellyfin:down"]
 description = "Stop and remove Jellyfin containers on ubuntu-01"
 dir = "ansible"
-run = "ansible-playbook jellyfin.yml -e state=absent"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin -e state=absent"
 
 [tasks."deploy:jellyfin:status"]
 description = "Check Jellyfin container status on ubuntu-01"
 dir = "ansible"
-run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml ps'"
+run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml ps'"
 
 [tasks."deploy:jellyfin:logs"]
 description = "Tail Jellyfin logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"
 
-[tasks."deploy:fileserver"]
-description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"
-dir = "ansible"
-run = "ansible-playbook fileserver.yml"
-
-[tasks."deploy:fileserver:zfs"]
-description = "Create ZFS datasets on bahamut"
-dir = "ansible"
-run = "ansible-playbook fileserver-zfs.yml"
-
-[tasks."deploy:fileserver:samba"]
-description = "Configure Samba file server on bahamut"
-dir = "ansible"
-run = "ansible-playbook fileserver-samba.yml"
-
-[tasks."deploy:fileserver:samba:down"]
-description = "Remove Samba from bahamut"
-dir = "ansible"
-run = "ansible-playbook fileserver-samba.yml -e state=absent"
-
-[tasks."deploy:fileserver:nfs"]
-description = "Configure NFS file server on bahamut"
-dir = "ansible"
-run = "ansible-playbook fileserver-nfs.yml"
-
-[tasks."deploy:fileserver:nfs:down"]
-description = "Remove NFS from bahamut"
-dir = "ansible"
-run = "ansible-playbook fileserver-nfs.yml -e state=absent"
-
-[tasks."deploy:fileserver:status"]
-description = "Check Samba and NFS status on bahamut"
-dir = "ansible"
-run = "ansible bahamut -m shell -a 'systemctl status smbd nfs-kernel-server --no-pager' --become"
-
-[tasks."deploy:homepage:deploy"]
+[tasks."deploy:homepage"]
 description = "Deploy Homepage to ubuntu-01 via Ansible"
 dir = "ansible"
-run = "ansible-playbook homepage.yml"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags homepage"
 
 [tasks."deploy:homepage:down"]
 description = "Stop and remove Homepage containers on ubuntu-01"
 dir = "ansible"
-run = "ansible-playbook homepage.yml -e state=absent"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags homepage -e state=absent"
 
 [tasks."deploy:homepage:status"]
 description = "Check Homepage container status on ubuntu-01"
 dir = "ansible"
-run = "ansible ubuntu-01 -m command -a 'docker compose -f /home/ubuntu/homepage/docker-compose.yml ps'"
+run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/homepage/docker-compose.yml ps'"
 
 [tasks."deploy:homepage:logs"]
 description = "Tail Homepage logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/homepage/docker-compose.yml logs -f'"
 
+[tasks."deploy:restic"]
+description = "Deploy Resticprofile to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic"
+
+[tasks."deploy:restic:down"]
+description = "Stop and remove Resticprofile containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic -e state=absent"
+
+[tasks."deploy:fileserver"]
+description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml"
+
+[tasks."deploy:fileserver:zfs"]
+description = "Create ZFS datasets on bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_zfs"
+
+[tasks."deploy:fileserver:nfs"]
+description = "Configure NFS file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs"
+
+[tasks."deploy:fileserver:nfs:down"]
+description = "Remove NFS from bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_nfs -e state=absent"
+
+[tasks."deploy:fileserver:samba"]
+description = "Configure Samba file server on bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba"
+
+[tasks."deploy:fileserver:samba:down"]
+description = "Remove Samba from bahamut"
+dir = "ansible"
+run = "ansible-playbook playbooks/bahamut.yml --tags fileserver_samba -e state=absent"
+
+[tasks."deploy:fileserver:status"]
+description = "Check Samba and NFS status on bahamut"
+dir = "ansible"
+run = "ansible file_servers -m shell -a 'systemctl status smbd nfs-kernel-server --no-pager' --become"
+
+[tasks."deploy:nfs:status"]
+description = "Check NFS mount status on ubuntu-01"
+dir = "ansible"
+run = "ansible app_servers -m shell -a 'mount | grep nfs' --become"

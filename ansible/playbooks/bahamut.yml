@@ -1,0 +1,10 @@
+---
+- hosts: file_servers
+  become: true
+  roles:
+    - role: fileserver_zfs
+      tags: fileserver_zfs
+    - role: fileserver_nfs
+      tags: fileserver_nfs
+    - role: fileserver_samba
+      tags: fileserver_samba

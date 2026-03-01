@@ -1,0 +1,18 @@
+["filebrowser:up"]
+description = "Deploy FileBrowser Quantum to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags filebrowser_quantum"
+
+["filebrowser:down"]
+description = "Stop and remove FileBrowser Quantum containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags filebrowser_quantum -e state=absent"
+
+["filebrowser:status"]
+description = "Check FileBrowser Quantum container status on ubuntu-01"
+dir = "ansible"
+run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/filebrowser-quantum/docker-compose.yaml ps'"
+
+["filebrowser:logs"]
+description = "Tail FileBrowser Quantum logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/filebrowser-quantum/docker-compose.yaml logs -f'"
