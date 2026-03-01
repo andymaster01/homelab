@@ -17,7 +17,25 @@ run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/resticp
 description = "Tail Resticprofile logs on ubuntu-01"
 run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/resticprofile/docker-compose.yml logs -f'"
 
-["restic:init"]
+["restic:list:profiles"]
+description = "List available resticprofile profiles on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 \"docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml profiles\""
+
+["restic:exec:backup"]
+description = "Run a backup for a given profile on ubuntu-01"
+usage = 'arg "<profile>" help="Resticprofile profile name (e.g. jellyfin-onedrive)"'
+run = """
+ssh ubuntu@192.168.1.130 "docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml --name '${usage_profile?}' backup"
+"""
+
+["restic:list:snapshots"]
+description = "List snapshots for a given profile on ubuntu-01"
+usage = 'arg "<profile>" help="Resticprofile profile name (e.g. jellyfin-onedrive)"'
+run = """
+ssh ubuntu@192.168.1.130 "docker exec resticprofile resticprofile --no-ansi --config /etc/resticprofile/profiles.toml --name '${usage_profile?}' snapshots"
+"""
+
+["restic:exec:init"]
 description = "Initialize a restic repository for a given profile on ubuntu-01 (idempotent)"
 usage = 'arg "<profile>" help="Resticprofile profile name (e.g. jellyfin-onedrive)"'
 run = """
