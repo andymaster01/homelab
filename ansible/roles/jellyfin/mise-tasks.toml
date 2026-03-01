@@ -1,0 +1,18 @@
+["jellyfin:up"]
+description = "Deploy Jellyfin to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin"
+
+["jellyfin:down"]
+description = "Stop and remove Jellyfin containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin -e state=absent"
+
+["jellyfin:status"]
+description = "Check Jellyfin container status on ubuntu-01"
+dir = "ansible"
+run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml ps'"
+
+["jellyfin:logs"]
+description = "Tail Jellyfin logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"

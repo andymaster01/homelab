@@ -1,0 +1,6 @@
+---
+state: present
+jellyfin_dir: /home/ubuntu/jellyfin
+PUID: "{{ lookup('env', 'PUID') }}"
+PGID: "{{ lookup('env', 'PGID') }}"
+TZ: "{{ lookup('env', 'TZ') }}"

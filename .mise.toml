@@ -8,6 +8,7 @@ includes = [
   "ansible/roles/fileserver_nfs/mise-tasks.toml",
   "ansible/roles/fileserver_samba/mise-tasks.toml",
   "ansible/roles/homepage/mise-tasks.toml",
+  "ansible/roles/jellyfin/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -49,25 +50,6 @@ run = "terraform apply -var-file=../terraform.tfvars"
 description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
-
-[tasks."deploy:jellyfin"]
-description = "Deploy Jellyfin to ubuntu-01 via Ansible"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin"
-
-[tasks."deploy:jellyfin:down"]
-description = "Stop and remove Jellyfin containers on ubuntu-01"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin -e state=absent"
-
-[tasks."deploy:jellyfin:status"]
-description = "Check Jellyfin container status on ubuntu-01"
-dir = "ansible"
-run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml ps'"
-
-[tasks."deploy:jellyfin:logs"]
-description = "Tail Jellyfin logs on ubuntu-01"
-run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/jellyfin/docker-compose.yml logs -f'"
 
 [tasks."deploy:restic"]
 description = "Deploy Resticprofile to ubuntu-01 via Ansible"
