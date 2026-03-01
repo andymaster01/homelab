@@ -9,6 +9,7 @@ terraform/**/.terraform.lock.hcl
 *.pem
 *.key
 **/secrets/
+age-key.txt
 
 # Ansible
 ansible/*.retry

@@ -32,7 +32,8 @@
       "Bash(brew info:*)",
       "Bash(cp:*)",
       "WebFetch(domain:jellyfin.org)",
-      "WebFetch(domain:api.jellyfin.org)"
+      "WebFetch(domain:api.jellyfin.org)",
+      "WebFetch(domain:fnox.jdx.dev)"
     ]
   }
 }

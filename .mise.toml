@@ -1,5 +1,11 @@
+[plugins]
+fnox-env = "https://github.com/jdx/mise-env-fnox"
+
+[tools]
+fnox = "latest"
+
 [env]
-_.file = '.env'
+_.fnox-env = { tools = true }
 
 [task_config]
 includes = [
