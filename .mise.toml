@@ -10,6 +10,7 @@ includes = [
   "ansible/roles/homepage/mise-tasks.toml",
   "ansible/roles/jellyfin/mise-tasks.toml",
   "ansible/roles/nfs_client/mise-tasks.toml",
+  "ansible/roles/restic/mise-tasks.toml",
 ]
 
 [tasks."tf:images:init"]
@@ -51,16 +52,6 @@ run = "terraform apply -var-file=../terraform.tfvars"
 description = "Destroy Proxmox VMs"
 dir = "terraform/proxmox/vms"
 run = "terraform destroy -var-file=../terraform.tfvars"
-
-[tasks."deploy:restic"]
-description = "Deploy Resticprofile to ubuntu-01 via Ansible"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic"
-
-[tasks."deploy:restic:down"]
-description = "Stop and remove Resticprofile containers on ubuntu-01"
-dir = "ansible"
-run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic -e state=absent"
 
 [tasks."deploy:fileserver"]
 description = "Deploy full fileserver stack on bahamut (ZFS → NFS → Samba, in order)"

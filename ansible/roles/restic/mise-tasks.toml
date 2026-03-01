@@ -1,0 +1,18 @@
+["restic:up"]
+description = "Deploy Resticprofile to ubuntu-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic"
+
+["restic:down"]
+description = "Stop and remove Resticprofile containers on ubuntu-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-01.yml --tags restic -e state=absent"
+
+["restic:status"]
+description = "Check Resticprofile container status on ubuntu-01"
+dir = "ansible"
+run = "ansible app_servers -m command -a 'docker compose -f /home/ubuntu/resticprofile/docker-compose.yml ps'"
+
+["restic:logs"]
+description = "Tail Resticprofile logs on ubuntu-01"
+run = "ssh ubuntu@192.168.1.130 'docker compose -f /home/ubuntu/resticprofile/docker-compose.yml logs -f'"
