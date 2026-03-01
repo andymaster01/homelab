@@ -4,22 +4,28 @@
   become: true
   tasks:
   
-    - name: Check local path exist
-      ansible.builtin.file:
-        path: /mnt/photos-videos-test
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-
     - name: Install nfs-common
       ansible.builtin.apt:
         name: nfs-common
         update_cache: true
 
-    - name: Mount NFS Share
+    - name: Create NFS mount point directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+      loop:
+        - /mnt/photos-videos-test
+        - /mnt/media
+
+    - name: Mount NFS shares
       ansible.posix.mount:
-        src: "192.168.1.101:/mnt/photos-videos-test"
-        path: /mnt/photos-videos-test
+        src: "192.168.1.101:{{ item }}"
+        path: "{{ item }}"
         fstype: nfs
         opts: "rw,sync,hard,intr,timeo=30,_netdev"
         state: mounted
+      loop:
+        - /mnt/photos-videos-test
+        - /mnt/media
