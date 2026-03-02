@@ -1,0 +1,45 @@
+# ============================================================
+# Videos 
+# ============================================================
+
+# Videos → OneDrive (rclone) — disaster recovery + plain file sync
+[videos-onedrive]
+inherit = "default"
+repository = "rclone:onedrive:restic_backups/videos"
+
+[videos-onedrive.env]
+RESTIC_PASSWORD = "{{ .Env.RESTIC_VIDEOS_PASSPHRASE }}"
+
+[videos-onedrive.backup]
+source = ["/mnt/source/pv/videos"]
+exclude = ["*.DS_Store", "*/.Trash*"]
+schedule = "02:30"
+schedule-permission = "system"
+tag = ["videos"]
+run-after = ["rclone sync /mnt/source/pv/videos onedrive:medias/videos --transfers=4 --checkers=8"]
+
+[[videos-onedrive.backup.send-before]]
+url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}/start"
+method = "HEAD"
+
+[[videos-onedrive.backup.send-after]]
+url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}"
+method = "HEAD"
+
+[[videos-onedrive.backup.send-after-fail]]
+url = "{{ .Env.HEALTHCHECKS_VIDEOS_ONEDRIVE_URL }}/fail"
+method = "HEAD"
+
+[videos-onedrive.forget]
+keep-daily = 7
+keep-weekly = 4
+keep-monthly = 12
+keep-yearly = 3
+prune = true
+schedule = "02:45"
+schedule-permission = "system"
+
+[videos-onedrive.check]
+read-data-subset = "5%"
+schedule = "Sun 05:00"
+schedule-permission = "system"

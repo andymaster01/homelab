@@ -22,7 +22,7 @@ services:
       - restic_cache:/root/.cache/restic
 
       # Source: entire photos-videos NFS dataset (read-only)
-      - /mnt/photos-videos-test:/mnt/source/pv:ro
+      - /mnt/photos-videos:/mnt/source/pv:ro
 
       # Source: Backups root (read-only)
       - /mnt/containers-data/backups:/mnt/source/backups:ro

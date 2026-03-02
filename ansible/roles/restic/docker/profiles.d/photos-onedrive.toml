@@ -1,51 +1,8 @@
 # ============================================================
-# Photos
+# Photos 
 # ============================================================
 
-# Photos → Hetzner Storage Box (SFTP) — primary disaster recovery
-# DISABLED — enable once Hetzner is set up
-#
-# [photos-hetzner]
-# inherit = "default"
-# repository = "sftp:{{ .Env.HETZNER_SFTP_USER }}@{{ .Env.HETZNER_SFTP_HOST }}:./restic/photos"
-#
-# [photos-hetzner.env]
-# RESTIC_PASSWORD = "{{ .Env.RESTIC_PHOTOS_PASSPHRASE }}"
-#
-# [photos-hetzner.backup]
-# source = ["/mnt/source/pv/photos"]
-# exclude = ["*.DS_Store", "*/.Trash*"]
-# schedule = "02:00"
-# schedule-permission = "system"
-# tag = ["photos"]
-#
-# [[photos-hetzner.backup.send-before]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}/start"
-# method = "HEAD"
-#
-# [[photos-hetzner.backup.send-after]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}"
-# method = "HEAD"
-#
-# [[photos-hetzner.backup.send-after-fail]]
-# url = "{{ .Env.HEALTHCHECKS_PHOTOS_HETZNER_URL }}/fail"
-# method = "HEAD"
-#
-# [photos-hetzner.forget]
-# keep-daily = 7
-# keep-weekly = 4
-# keep-monthly = 12
-# keep-yearly = 3
-# prune = true
-# schedule = "02:15"
-# schedule-permission = "system"
-#
-# [photos-hetzner.check]
-# read-data-subset = "5%"
-# schedule = "Sun 04:00"
-# schedule-permission = "system"
-
-# Photos → OneDrive (rclone) — secondary disaster recovery + plain file sync
+# Photos → OneDrive (rclone) — disaster recovery + plain file sync
 [photos-onedrive]
 inherit = "default"
 repository = "rclone:onedrive:restic_backups/photos"
@@ -59,7 +16,7 @@ exclude = ["*.DS_Store", "*/.Trash*"]
 schedule = "02:30"
 schedule-permission = "system"
 tag = ["photos"]
-run-after = ["rclone sync /mnt/source/pv/photos onedrive:PhotosPlain --transfers=4 --checkers=8"]
+run-after = ["rclone sync /mnt/source/pv/photos onedrive:medias/photos --transfers=4 --checkers=8"]
 
 [[photos-onedrive.backup.send-before]]
 url = "{{ .Env.HEALTHCHECKS_PHOTOS_ONEDRIVE_URL }}/start"
