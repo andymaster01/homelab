@@ -6,6 +6,9 @@ all:
     bahamut:
       ansible_host: 192.168.1.101
       ansible_user: root
+    monitoring-01:
+      ansible_host: 192.168.1.150
+      ansible_user: ubuntu
   children:
     app_servers:
       hosts:
@@ -13,3 +16,6 @@ all:
     file_servers:
       hosts:
         bahamut:
+    monitoring_servers:
+      hosts:
+        monitoring-01:
