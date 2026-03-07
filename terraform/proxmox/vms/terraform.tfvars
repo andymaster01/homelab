@@ -6,6 +6,13 @@ vms = {
     gateway   = "192.168.1.1"
     memory    = 8192
   }
+  ubuntu-02 = {
+    node_name = "bahamut"
+    vm_id     = 202
+    ip        = "192.168.1.131/24"
+    gateway   = "192.168.1.1"
+    memory    = 8192
+  }
   monitoring-01 = {
     node_name = "eiko"
     vm_id     = 201

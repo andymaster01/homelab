@@ -1,0 +1,6 @@
+---
+- hosts: ubuntu-02 
+  become: true
+  roles:
+    - role: nfs_client
+      tags: nfs_client

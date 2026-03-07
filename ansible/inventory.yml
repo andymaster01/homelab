@@ -3,6 +3,9 @@ all:
     ubuntu-01:
       ansible_host: 192.168.1.130
       ansible_user: ubuntu
+    ubuntu-02:
+      ansible_host: 192.168.1.131
+      ansible_user: ubuntu
     bahamut:
       ansible_host: 192.168.1.101
       ansible_user: root
@@ -13,6 +16,7 @@ all:
     app_servers:
       hosts:
         ubuntu-01:
+        ubuntu-02:
     file_servers:
       hosts:
         bahamut:
