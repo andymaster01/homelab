@@ -15,9 +15,11 @@ provider "proxmox" {
 }
 
 resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
+  for_each     = toset(var.proxmox_nodes)
   content_type = "iso"
   datastore_id = var.proxmox_storage_iso
-  node_name    = var.proxmox_node
+  node_name    = each.value
   url          = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
   file_name    = "ubuntu-24.04-cloudimg-amd64.img"
+  overwrite    = false
 }

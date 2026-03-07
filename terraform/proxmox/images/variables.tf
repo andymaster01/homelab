@@ -15,9 +15,9 @@ variable "proxmox_insecure" {
   default     = true
 }
 
-variable "proxmox_node" {
-  description = "Proxmox node name"
-  type        = string
+variable "proxmox_nodes" {
+  description = "List of proxmox node names to download image to"
+  type        = list(string)
 }
 
 variable "proxmox_storage_iso" {
