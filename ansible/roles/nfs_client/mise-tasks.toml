@@ -1,9 +1,19 @@
-["nfs_client:deploy"]
+["nfs_client:ubuntu-01:deploy"]
 description = "Deploy NFS client role on ubuntu-01"
 dir = "ansible"
 run = "ansible-playbook playbooks/ubuntu-01.yml --tags nfs_client"
 
-["nfs_client:status"]
+["nfs_client:ubuntu-01:status"]
 description = "Check NFS mount status on ubuntu-01"
 dir = "ansible"
-run = "ansible app_servers -m shell -a 'mount | grep nfs' --become"
+run = "ansible ubuntu-01 -m shell -a 'mount | grep nfs' --become"
+
+["nfs_client:monitoring-01:deploy"]
+description = "Deploy NFS client role on monitoring-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/monitoring-01.yml --tags nfs_client"
+
+["nfs_client:monitoring-01:status"]
+description = "Check NFS mount status on monitoring-01"
+dir = "ansible"
+run = "ansible monitoring-01 -m shell -a 'mount | grep nfs' --become"
