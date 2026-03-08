@@ -20,7 +20,8 @@ includes = [
   "ansible/roles/nfs_client/mise-tasks.toml",
   "ansible/roles/restic/mise-tasks.toml",
   "ansible/roles/postgresql18/mise-tasks.toml",
-  "ansible/roles/pg_backup/mise-tasks.toml"
+  "ansible/roles/pg_backup/mise-tasks.toml",
+  "ansible/roles/manga/mise-tasks.toml"
 ]
 
 [tasks."tf:images:init"]

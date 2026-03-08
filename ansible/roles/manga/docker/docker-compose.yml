@@ -1,26 +1,10 @@
----
 services:
   suwayomi:
     image: ghcr.io/suwayomi/suwayomi-server:stable
-    # user: 1000:1000
     environment:
-      - TZ=Etc/UTC # Use TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-      # Comment these out if you do not use the flaresolverr container at the bottom of this file
+      - TZ=America/Toronto 
       - FLARESOLVERR_ENABLED=true
       - FLARESOLVERR_URL=http://flaresolverr:8191
-#  #################################################################################################
-#
-#    !!! IMPORTANT !!!
-#     - server settings can be changed during runtime in the WebUI
-#     - providing an environment variable will OVERWRITE the current setting value when starting the container
-#
-#  #################################################################################################
-#
-#    example for setting env vars:
-#
-#      - BIND_IP=0.0.0.0
-#      - BIND_PORT=4567
-#      - SOCKS_PROXY_ENABLED=false
       - DOWNLOAD_AS_CBZ=true
 #      - AUTH_MODE=basic_auth
 #      - AUTH_USERNAME=manga
@@ -28,30 +12,26 @@ services:
       - EXTENSION_REPOS=["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]
     volumes:
       - ./suwayomi-files:/home/suwayomi/.local/share/Tachidesk
-      - ./downloads:/home/suwayomi/.local/share/Tachidesk/downloads
+      - /mnt/containers-data/manga-downloads:/home/suwayomi/.local/share/Tachidesk/downloads
     ports:
       - "4567:4567"
-    restart: on-failure:3
+    restart: unless-stopped
 
   flaresolverr:
     image: ghcr.io/thephaseless/byparr:latest
     container_name: flaresolverr
     init: true
     environment:
-      - TZ=Etc/UTC # Use TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - TZ=America/Toronto
     restart: unless-stopped
   
   komga:
     image: gotson/komga
+    user: "1000:1000"
     container_name: komga
     volumes:
       - ./komga-files:/config
-      - ./downloads:/data
+      - /mnt/containers-data/manga-downloads:/data
     ports:
-      - 25600:25600
-    user: "1000:1000"
-    # remove the whole environment section if you don't need it
-    # environment:
-      # - TZ=Europe/London
-      # - <ENV_VAR>=<extra configuration>
+      - "25600:25600"
     restart: unless-stopped

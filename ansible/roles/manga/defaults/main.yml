@@ -1,3 +1,4 @@
 ---
 state: present
 manga_dir: /home/ubuntu/manga
+downloads_dir: /mnt/containers-data/manga-downloads

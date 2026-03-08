@@ -1,0 +1,18 @@
+["manga:up"]
+description = "Deploy Manga to ubuntu-02 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-02.yml --tags manga"
+
+["manga:down"]
+description = "Stop and remove Manga containers on ubuntu-02"
+dir = "ansible"
+run = "ansible-playbook playbooks/ubuntu-02.yml --tags manga -e state=absent"
+
+["manga:status"]
+description = "Check Manga container status on ubuntu-02"
+dir = "ansible"
+run = "ansible ubuntu-02 -m command -a 'docker compose -f /home/ubuntu/manga/docker-compose.yml ps'"
+
+["manga:logs"]
+description = "Tail Manga logs on ubuntu-02"
+run = "ssh ubuntu@192.168.1.131 'docker compose -f /home/ubuntu/manga/docker-compose.yml logs -f'"
