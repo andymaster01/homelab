@@ -20,4 +20,11 @@ vms = {
     gateway   = "192.168.1.1"
     memory    = 2048
   }
+  db-pg-01 = {
+    node_name = "eiko"
+    vm_id     = 203
+    ip        = "192.168.1.151/24"
+    gateway   = "192.168.1.1"
+    memory    = 4096
+  }
 }

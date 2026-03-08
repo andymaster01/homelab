@@ -1,0 +1,41 @@
+---
+- name: Run docker compose down
+  ansible.builtin.command:
+    cmd: docker compose down
+    chdir: "{{ postgresql18_dir }}"
+  when: state == "absent"
+
+- name: Create postgresql18 directory
+  ansible.builtin.file:
+    path: "{{ postgresql18_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Copy docker-compose.yml
+  ansible.builtin.copy:
+    src: "{{ role_path }}/docker/docker-compose.yml"
+    dest: "{{ postgresql18_dir }}/docker-compose.yml"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  register: compose_file
+  when: state == "present"
+
+- name: Template .env file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ postgresql18_dir }}/.env"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0600"
+  register: env_file
+  when: state == "present"
+
+- name: Run docker compose up
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ postgresql18_dir }}"
+  when: state == "present" and (compose_file.changed or env_file.changed)

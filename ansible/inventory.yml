@@ -12,6 +12,9 @@ all:
     monitoring-01:
       ansible_host: 192.168.1.150
       ansible_user: ubuntu
+    db-pg-01:
+      ansible_host: 192.168.1.151
+      ansible_user: ubuntu
   children:
     app_servers:
       hosts:
@@ -23,3 +26,6 @@ all:
     monitoring_servers:
       hosts:
         monitoring-01:
+    db_servers:
+      hosts:
+        db-pg-01:

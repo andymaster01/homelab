@@ -34,7 +34,8 @@
       "WebFetch(domain:jellyfin.org)",
       "WebFetch(domain:api.jellyfin.org)",
       "WebFetch(domain:fnox.jdx.dev)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(cat:*)"
     ]
   }
 }
