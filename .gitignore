@@ -17,3 +17,7 @@ ansible/*.retry
 # OS
 .DS_Store
 terraform/proxmox/.terraform.tfstate.lock.info
+
+# Claude setings
+.claude/settings.local.json
+
