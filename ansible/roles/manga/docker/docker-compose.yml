@@ -1,7 +1,4 @@
 ---
-volumes:
-  manga-data:
-
 services:
   suwayomi:
     image: ghcr.io/suwayomi/suwayomi-server:stable
@@ -24,14 +21,14 @@ services:
 #      - BIND_IP=0.0.0.0
 #      - BIND_PORT=4567
 #      - SOCKS_PROXY_ENABLED=false
-#      - DOWNLOAD_AS_CBZ=true
+      - DOWNLOAD_AS_CBZ=true
 #      - AUTH_MODE=basic_auth
 #      - AUTH_USERNAME=manga
 #      - AUTH_PASSWORD=hello123
-#      - EXTENSION_REPOS=["http://github.com/orginazation-name/repo-name", "http://github.com/orginazation-name-2/repo-name-2"]
+      - EXTENSION_REPOS=["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]
     volumes:
       - ./suwayomi-files:/home/suwayomi/.local/share/Tachidesk
-      - manga-data:/home/suwayomi/.local/share/Tachidesk/downloads
+      - ./downloads:/home/suwayomi/.local/share/Tachidesk/downloads
     ports:
       - "4567:4567"
     restart: on-failure:3
@@ -49,7 +46,7 @@ services:
     container_name: komga
     volumes:
       - ./komga-files:/config
-      - manga-data:/data
+      - ./downloads:/data
     ports:
       - 25600:25600
     user: "1000:1000"
