@@ -1,0 +1,6 @@
+---
+state: present
+pg_backup_dir: /home/ubuntu/pg_backup
+POSTGRESQL18_USER: "{{ lookup('env', 'POSTGRESQL18_USER') }}"
+POSTGRESQL18_PASSWORD: "{{ lookup('env', 'POSTGRESQL18_PASSWORD') }}"
+POSTGRESQL18_BACKUP_DBS: "{{ lookup('env', 'POSTGRESQL18_BACKUP_DBS') }}"
