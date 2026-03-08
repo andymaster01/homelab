@@ -1,0 +1,31 @@
+---
+- name: Run docker compose down
+  ansible.builtin.command:
+    cmd: docker compose down
+    chdir: "{{ manga_dir }}"
+  when: state == "absent"
+
+- name: Create manga directory
+  ansible.builtin.file:
+    path: "{{ manga_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Copy docker-compose.yml
+  ansible.builtin.copy:
+    src: "{{ role_path }}/docker/docker-compose.yml"
+    dest: "{{ manga_dir }}/docker-compose.yml"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  register: compose_file
+  when: state == "present"
+
+- name: Run docker compose up
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ manga_dir }}"
+  when: state == "present" and compose_file.changed

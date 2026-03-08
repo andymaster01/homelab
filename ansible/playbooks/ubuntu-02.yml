@@ -4,3 +4,5 @@
   roles:
     - role: nfs_client
       tags: nfs_client
+    - role: manga
+      tags: manga
