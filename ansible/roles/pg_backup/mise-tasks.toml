@@ -1,0 +1,9 @@
+["pg_backup:up"]
+description = "Deploy pg_backup cron to db-pg-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/db-pg-01.yml --tags pg_backup"
+
+["pg_backup:down"]
+description = "Remove pg_backup cron from db-pg-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/db-pg-01.yml --tags pg_backup -e state=absent"

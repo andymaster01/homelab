@@ -1,0 +1,6 @@
+---
+state: present
+postgresql18_dir: /home/ubuntu/postgresql18
+POSTGRESQL18_USER: "{{ lookup('env', 'POSTGRESQL18_USER') }}"
+POSTGRESQL18_PASSWORD: "{{ lookup('env', 'POSTGRESQL18_PASSWORD') }}"
+POSTGRESQL18_DBNAME: "{{ lookup('env', 'POSTGRESQL18_DBNAME') }}"

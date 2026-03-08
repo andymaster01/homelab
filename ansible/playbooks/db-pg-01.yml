@@ -1,0 +1,10 @@
+---
+- hosts: db-pg-01 
+  become: true
+  roles:
+    - role: nfs_client
+      tags: nfs_client
+    - role: postgresql18
+      tags: postgresql18
+    - role: pg_backup
+      tags: pg_backup

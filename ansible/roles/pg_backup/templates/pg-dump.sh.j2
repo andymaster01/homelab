@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+BACKUP_DIR="/mnt/containers-data/backups/postgresql"
+DBS="{{ POSTGRESQL18_BACKUP_DBS }}"
+PG_USER="{{ POSTGRESQL18_USER }}"
+
+IFS=',' read -ra DB_LIST <<< "$DBS"
+for db in "${DB_LIST[@]}"; do
+  db="$(echo "$db" | xargs)"  # trim whitespace
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Dumping ${db}..."
+  docker exec postgresql18 pg_dump -U "$PG_USER" -d "$db" -F c > "${BACKUP_DIR}/${db}.dump"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Done: ${BACKUP_DIR}/${db}.dump"
+done

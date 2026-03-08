@@ -1,0 +1,42 @@
+---
+- name: Create pg_backup directory
+  ansible.builtin.file:
+    path: "{{ pg_backup_dir }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Create postgresql backup directory on NFS share
+  ansible.builtin.file:
+    path: /mnt/containers-data/backups/postgresql
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Template pg-dump.sh script
+  ansible.builtin.template:
+    src: pg-dump.sh.j2
+    dest: "{{ pg_backup_dir }}/pg-dump.sh"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+  when: state == "present"
+
+- name: Set up daily pg_dump cron job
+  ansible.builtin.cron:
+    name: "pg_backup daily dump"
+    minute: "30"
+    hour: "2"
+    job: "{{ pg_backup_dir }}/pg-dump.sh >> {{ pg_backup_dir }}/pg-dump.log 2>&1"
+    user: root
+    state: "{{ state }}"
+
+- name: Remove pg_backup directory
+  ansible.builtin.file:
+    path: "{{ pg_backup_dir }}"
+    state: absent
+  when: state == "absent"

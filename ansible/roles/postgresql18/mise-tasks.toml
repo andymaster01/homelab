@@ -1,0 +1,18 @@
+["postgresql18:up"]
+description = "Deploy PostgreSQL 18 to db-pg-01 via Ansible"
+dir = "ansible"
+run = "ansible-playbook playbooks/db-pg-01.yml --tags postgresql18"
+
+["postgresql18:down"]
+description = "Stop and remove PostgreSQL 18 containers on db-pg-01"
+dir = "ansible"
+run = "ansible-playbook playbooks/db-pg-01.yml --tags postgresql18 -e state=absent"
+
+["postgresql18:status"]
+description = "Check PostgreSQL 18 container status on db-pg-01"
+dir = "ansible"
+run = "ansible db_servers -m command -a 'docker compose -f /home/ubuntu/postgresql18/docker-compose.yml ps'"
+
+["postgresql18:logs"]
+description = "Tail PostgreSQL 18 logs on db-pg-01"
+run = "ssh ubuntu@192.168.1.151 'docker compose -f /home/ubuntu/postgresql18/docker-compose.yml logs -f'"

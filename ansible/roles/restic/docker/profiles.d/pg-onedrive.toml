@@ -1,0 +1,31 @@
+# ============================================================
+# PostgreSQL
+# ============================================================
+#
+# PostgreSQL dumps → OneDrive
+[pg-onedrive]
+inherit = "default"
+repository = "rclone:onedrive:restic_backups/postgresql"
+
+[pg-onedrive.env]
+RESTIC_PASSWORD = "{{ .Env.RESTIC_PG_BACKUP_PASSPHRASE }}"
+
+[pg-onedrive.backup]
+source = ["/mnt/source/backups/postgresql"]
+schedule = "03:00"
+schedule-permission = "system"
+extended-status = true
+tag = ["postgresql"]
+
+[pg-onedrive.forget]
+keep-daily = 7
+keep-weekly = 4
+keep-monthly = 6
+prune = true
+schedule = "03:15"
+schedule-permission = "system"
+
+[pg-onedrive.check]
+read-data-subset = "5%"
+schedule = "Sun 06:30"
+schedule-permission = "system"
