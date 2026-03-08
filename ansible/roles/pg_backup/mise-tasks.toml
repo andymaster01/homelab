@@ -7,3 +7,8 @@ run = "ansible-playbook playbooks/db-pg-01.yml --tags pg_backup"
 description = "Remove pg_backup cron from db-pg-01"
 dir = "ansible"
 run = "ansible-playbook playbooks/db-pg-01.yml --tags pg_backup -e state=absent"
+
+["pg_backup:run"]
+description = "Run backups"
+dir = "ansible"
+run = "ansible db-pg-01 -m command -a '/home/ubuntu/pg_backup/pg-dump.sh'"
