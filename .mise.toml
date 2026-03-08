@@ -6,6 +6,8 @@ fnox = "latest"
 
 [env]
 _.fnox-env = { tools = true }
+POSTGRESQL18_BACKUP_DBS = "default"
+HEALTHCHECKS_PG_BACKUP_ONEDRIVE_URL = "https://hc-ping.com/xxx"
 
 [task_config]
 includes = [
