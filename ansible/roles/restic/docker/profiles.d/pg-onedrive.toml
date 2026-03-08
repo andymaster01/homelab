@@ -1,7 +1,7 @@
 # ============================================================
 # PostgreSQL
 # ============================================================
-
+#
 # PostgreSQL dumps → OneDrive
 [pg-onedrive]
 inherit = "default"
@@ -16,20 +16,6 @@ schedule = "03:00"
 schedule-permission = "system"
 extended-status = true
 tag = ["postgresql"]
-
-# [[pg-onedrive.backup.send-before]]
-# url = "{{ .Env.HEALTHCHECKS_PG_BACKUP_ONEDRIVE_URL }}/start"
-# method = "HEAD"
-#
-# [[pg-onedrive.backup.send-after]]
-# url = "{{ .Env.HEALTHCHECKS_PG_BACKUP_ONEDRIVE_URL }}"
-# method = "HEAD"
-# headers = ["Content-Type: application/json"]
-# body = '{{ .Summary }}'
-#
-# [[pg-onedrive.backup.send-after-fail]]
-# url = "{{ .Env.HEALTHCHECKS_PG_BACKUP_ONEDRIVE_URL }}/fail"
-# method = "HEAD"
 
 [pg-onedrive.forget]
 keep-daily = 7
