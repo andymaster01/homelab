@@ -1,0 +1,37 @@
+services:
+  suwayomi:
+    image: ghcr.io/suwayomi/suwayomi-server:stable
+    environment:
+      - TZ=America/Toronto 
+      - FLARESOLVERR_ENABLED=true
+      - FLARESOLVERR_URL=http://flaresolverr:8191
+      - DOWNLOAD_AS_CBZ=true
+#      - AUTH_MODE=basic_auth
+#      - AUTH_USERNAME=manga
+#      - AUTH_PASSWORD=hello123
+      - EXTENSION_REPOS=["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]
+    volumes:
+      - ./suwayomi-files:/home/suwayomi/.local/share/Tachidesk
+      - /mnt/containers-data/manga-downloads:/home/suwayomi/.local/share/Tachidesk/downloads
+    ports:
+      - "4567:4567"
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: flaresolverr
+    init: true
+    environment:
+      - TZ=America/Toronto
+    restart: unless-stopped
+  
+  komga:
+    image: gotson/komga
+    user: "1000:1000"
+    container_name: komga
+    volumes:
+      - ./komga-files:/config
+      - /mnt/containers-data/manga-downloads:/data
+    ports:
+      - "25600:25600"
+    restart: unless-stopped

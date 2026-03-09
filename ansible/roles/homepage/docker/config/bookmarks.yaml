@@ -1,6 +1,8 @@
 ---
 # For configuration options and examples, please see:
 # https://gethomepage.dev/configs/bookmarks
+#
+# Icons from: https://dashboardicons.com/
 
 - Developer:
     - Jellyfin:
@@ -14,5 +16,14 @@
     - FileBrowser:
         - icon: filebrowser-quantum
           href: http://192.168.1.130:8010/
+
+- Media:
+    - Suwayomi:
+        - icon: suwayomi 
+          href: http://192.168.1.131:4567/
+
+    - Komga: 
+        - icon: komga
+          href: http://192.168.1.131:25600/
 
     
