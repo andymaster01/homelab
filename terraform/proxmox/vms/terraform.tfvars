@@ -5,6 +5,7 @@ vms = {
     ip        = "192.168.1.130/24"
     gateway   = "192.168.1.1"
     memory    = 8192
+    disk_size = 32
   }
   ubuntu-02 = {
     node_name = "bahamut"
