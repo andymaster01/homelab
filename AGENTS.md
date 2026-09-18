@@ -35,7 +35,7 @@ There is no dedicated automated test suite in this repo today. Validate changes 
 - When editing Docker compose assets under a role, verify the matching `mise run <role>:up` task still succeeds.
 
 ## Commit & Pull Request Guidelines
-Recent commits use short, imperative, lowercase summaries such as `add ansible setup` or `suwayomi working`. Keep commits focused and descriptive.
+After every change, create a focused Git commit. Commit messages must use a Conventional Commits type prefix, such as `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, or `test:`; for example, `feat: add ansible setup` or `fix: repair suwayomi deployment`. Keep commits focused and descriptive.
 
 PRs should include:
 
