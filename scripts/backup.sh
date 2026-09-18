@@ -65,8 +65,8 @@ shift 4
 item_paths=("$@")
 stopped_by_backup=false
 
-if ! command -v zip >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
-  echo "Either zip or python3 is required on the remote server" >&2
+if ! command -v zip >/dev/null 2>&1; then
+  echo "zip is required on the remote server" >&2
   exit 1
 fi
 
@@ -109,25 +109,7 @@ for item_path in "${item_paths[@]}"; do
 done
 
 echo "Creating backup: $archive_path"
-if command -v zip >/dev/null 2>&1; then
-  (cd / && zip -q -r "$temporary_archive" "${relative_paths[@]}")
-else
-  python3 - "$temporary_archive" "${relative_paths[@]}" <<'PYTHON'
-import os
-import sys
-import zipfile
-
-archive_path = sys.argv[1]
-paths = sys.argv[2:]
-
-with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-    for path in paths:
-        for root, _, files in os.walk(path):
-            for filename in files:
-                file_path = os.path.join(root, filename)
-                archive.write(file_path, file_path)
-PYTHON
-fi
+(cd / && zip -q -r "$temporary_archive" "${relative_paths[@]}")
 mv -- "$temporary_archive" "$archive_path"
 echo "Backup created: $archive_path"
 REMOTE_SCRIPT
