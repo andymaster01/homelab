@@ -13,8 +13,6 @@ age-key.txt
 
 # Local container data
 temp-data/
-containers/audiobookshelf/data/
-containers/audiobookshelf/media/
 
 # Ansible
 ansible/*.retry
