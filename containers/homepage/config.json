@@ -1,0 +1,14 @@
+{
+  "remote": "192.168.1.130",
+  "backup": {
+    "stopContainer": true,
+    "destination": "/mnt/containers-data/backups/homepage",
+    "items": [
+      {
+        "path": "/var/lib/homepage/config",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}

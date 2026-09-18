@@ -19,11 +19,9 @@
 
 - Media:
     - Suwayomi:
-        - icon: suwayomi 
+        - icon: suwayomi
           href: http://192.168.1.131:4567/
 
-    - Komga: 
+    - Komga:
         - icon: komga
           href: http://192.168.1.131:25600/
-
-    

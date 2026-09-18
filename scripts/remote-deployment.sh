@@ -20,6 +20,7 @@ compose_dir="$repo_root/containers/$container_name"
 compose_file="$compose_dir/docker-compose.yml"
 env_file="$compose_dir/.env.remote"
 config_file="$compose_dir/config.json"
+config_dir="$compose_dir/config"
 remote_compose_root="/home/ubuntu/compose"
 remote_container_dir="$remote_compose_root/$container_name"
 
@@ -56,6 +57,12 @@ fi
 
 echo "Copying deployment files..."
 scp "$compose_file" "$env_file" "$ssh_target:$remote_container_dir/"
+
+if [[ -d "$config_dir" ]]; then
+  echo "Copying container config..."
+  ssh "$ssh_target" "mkdir -p '$remote_container_dir/config'"
+  scp -r "$config_dir/." "$ssh_target:$remote_container_dir/config/"
+fi
 
 echo "Starting $container_name remotely..."
 ssh "$ssh_target" "cd '$remote_container_dir' && docker compose --env-file .env.remote -f docker-compose.yml pull && docker compose --env-file .env.remote -f docker-compose.yml up -d"

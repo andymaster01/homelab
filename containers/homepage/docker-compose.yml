@@ -1,0 +1,19 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+
+    ports:
+      - "80:3000"
+
+    volumes:
+      - type: bind
+        source: ${CONTAINERS_DATA}/config
+        target: /app/config
+
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "*"
+      PUID: 1000
+      PGID: 100
+      TZ: ${TZ:-America/Toronto}

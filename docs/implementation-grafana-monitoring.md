@@ -117,7 +117,7 @@ providers:
 - Row 2 (Time series): Duration Over Time, Files Added Over Time, Data Added Over Time, Status History
 - Value mappings: 0→Failed(red), 1→Warning(yellow), 2→Success(green)
 
-**`ansible/roles/monitoring/tasks/main.yml`** — follow the homepage role pattern (`ansible/roles/homepage/tasks/main.yml`):
+**`ansible/roles/monitoring/tasks/main.yml`** — follow the existing service deployment pattern (`containers/homepage/docker-compose.yml` and `scripts/remote-deployment.sh`):
 1. `docker compose down` when `state == "absent"`
 2. Create directory structure (monitoring dir + prometheus/ + grafana/provisioning/datasources + grafana/provisioning/dashboards + grafana/dashboards)
 3. Copy docker-compose.yml
