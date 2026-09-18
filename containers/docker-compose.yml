@@ -8,10 +8,10 @@ services:
       - "13378:80"
 
     volumes:
-      - /mnt/containers-data/audiobookshelf/config:/config
-      - /mnt/containers-data/audiobookshelf/metadata:/metadata
-      - /mnt/media/audiobooks:/audiobooks:ro
-      - /mnt/media/podcasts:/podcasts:ro
+      - ${CONTAINERS_DATA}/audiobookshelf/config:/config
+      - ${CONTAINERS_DATA}/audiobookshelf/metadata:/metadata
+      - ${MEDIA_ROOT}/audiobooks:/audiobooks:ro
+      - ${MEDIA_ROOT}/podcasts:/podcasts:ro
 
     environment:
       TZ: ${TZ:-America/Toronto}
