@@ -2,7 +2,7 @@
   "remote": "192.168.1.151",
   "backup": {
     "stopContainer": true,
-    "destination": "/mnt/containers-data/audiobookshelf",
+    "destination": "/mnt/containers-data/backups/audiobookshelf",
     "items": [
       {
         "path": "/var/lib/audiobookshelf/config",

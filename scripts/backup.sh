@@ -88,12 +88,12 @@ fi
 mkdir -p "$destination"
 
 shopt -s nullglob
-backup_files=("$destination"/"$container_name"-*.zip)
+backup_files=("$destination"/*.zip)
 while (( ${#backup_files[@]} >= retention )); do
   oldest_backup="$(ls -1tr -- "${backup_files[@]}" | head -n 1)"
   echo "Removing old backup: $oldest_backup"
   rm -f -- "$oldest_backup"
-  backup_files=("$destination"/"$container_name"-*.zip)
+  backup_files=("$destination"/*.zip)
 done
 
 archive_path="$destination/$container_name-$(date '+%Y-%H%M%S').zip"
