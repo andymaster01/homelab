@@ -8,8 +8,8 @@ services:
       - "13378:80"
 
     volumes:
-      - ${CONTAINERS_DATA}/audiobookshelf/config:/config
-      - ${CONTAINERS_DATA}/audiobookshelf/metadata:/metadata
+      - ${CONTAINERS_DATA}/config:/config
+      - ${CONTAINERS_DATA}/metadata:/metadata
       - ${MEDIA_ROOT}/audiobooks:/audiobooks:ro
       - ${MEDIA_ROOT}/podcasts:/podcasts:ro
 
