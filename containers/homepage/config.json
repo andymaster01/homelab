@@ -1,5 +1,11 @@
 {
   "remote": "192.168.1.130",
+  "items": [
+    {
+      "path": "config",
+      "type": "folder"
+    }
+  ],
   "backup": {
     "stopContainer": true,
     "destination": "/mnt/containers-data/backups/homepage",

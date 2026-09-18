@@ -20,7 +20,6 @@ compose_dir="$repo_root/containers/$container_name"
 compose_file="$compose_dir/docker-compose.yml"
 env_file="$compose_dir/.env.remote"
 config_file="$compose_dir/config.json"
-config_dir="$compose_dir/config"
 remote_compose_root="/home/ubuntu/compose"
 remote_container_dir="$remote_compose_root/$container_name"
 
@@ -44,6 +43,20 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
+if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
+  echo "CONTAINERS_DATA must be an absolute path without whitespace in $env_file" >&2
+  exit 1
+fi
+
+mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+for item_path in "${item_paths[@]}"; do
+  if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
+    echo "Deployment item paths must be relative and contain no whitespace: $item_path" >&2
+    exit 1
+  fi
+done
+
 remote_host="$(jq -er '.remote | strings | select(length > 0)' "$config_file")"
 ssh_target="ubuntu@$remote_host"
 
@@ -58,11 +71,17 @@ fi
 echo "Copying deployment files..."
 scp "$compose_file" "$env_file" "$ssh_target:$remote_container_dir/"
 
-if [[ -d "$config_dir" ]]; then
-  echo "Copying container config..."
-  ssh "$ssh_target" "mkdir -p '$remote_container_dir/config'"
-  scp -r "$config_dir/." "$ssh_target:$remote_container_dir/config/"
-fi
+for item_path in "${item_paths[@]}"; do
+  source_dir="$compose_dir/$item_path"
+  if [[ ! -d "$source_dir" ]]; then
+    echo "Deployment source directory not found: $source_dir" >&2
+    exit 1
+  fi
+
+  echo "Copying deployment item: $item_path"
+  ssh "$ssh_target" "mkdir -p '$container_data/$item_path'"
+  scp -r "$source_dir/." "$ssh_target:$container_data/$item_path/"
+done
 
 echo "Starting $container_name remotely..."
 ssh "$ssh_target" "cd '$remote_container_dir' && docker compose --env-file .env.remote -f docker-compose.yml pull && docker compose --env-file .env.remote -f docker-compose.yml up -d"
