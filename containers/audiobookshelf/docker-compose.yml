@@ -8,10 +8,24 @@ services:
       - "13378:80"
 
     volumes:
-      - ${CONTAINERS_DATA}/config:/config
-      - ${CONTAINERS_DATA}/metadata:/metadata
-      - ${MEDIA_ROOT}/audiobooks:/audiobooks:ro
-      - ${MEDIA_ROOT}/podcasts:/podcasts:ro
+      - type: bind
+        source: ${CONTAINERS_DATA}/config
+        target: /config
+      - type: bind
+        source: ${CONTAINERS_DATA}/metadata
+        target: /metadata
+      - type: bind
+        source: ${AUDIOBOOKS_ROOT}
+        target: /audiobooks
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PODCASTS_ROOT}
+        target: /podcasts
+        read_only: true
+        bind:
+          create_host_path: false
 
     environment:
       TZ: ${TZ:-America/Toronto}
