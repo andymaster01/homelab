@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "13378:80"
+      - "${PORT:-13378}:80"
 
     volumes:
       - type: bind

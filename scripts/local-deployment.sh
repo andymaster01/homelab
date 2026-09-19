@@ -35,6 +35,8 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
+
 container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
 if [[ -z "$container_data" ]]; then
   echo "CONTAINERS_DATA is required in $env_file" >&2
@@ -74,7 +76,7 @@ if docker container inspect "$container_name" >/dev/null 2>&1 && [[ "$(docker in
 fi
 
 echo "Deploying $container_name locally..."
-docker compose \
+PORT="$port" docker compose \
   --env-file "$env_file" \
   -f "$compose_file" \
   up -d

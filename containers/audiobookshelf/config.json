@@ -1,5 +1,6 @@
 {
   "remote": "192.168.1.151",
+  "port": 13378,
   "backup": {
     "stopContainer": true,
     "destination": "/mnt/containers-data/backups/audiobookshelf",

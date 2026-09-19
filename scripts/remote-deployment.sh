@@ -43,6 +43,7 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
 container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
 if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
   echo "CONTAINERS_DATA must be an absolute path without whitespace in $env_file" >&2
@@ -84,6 +85,6 @@ for item_path in "${item_paths[@]}"; do
 done
 
 echo "Starting $container_name remotely..."
-ssh "$ssh_target" "cd '$remote_container_dir' && docker compose --env-file .env.remote -f docker-compose.yml pull && docker compose --env-file .env.remote -f docker-compose.yml up -d"
+ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
 
 printf '\033[0;32mDone!\033[0m\n'
