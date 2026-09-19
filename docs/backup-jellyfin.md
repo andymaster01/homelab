@@ -59,7 +59,7 @@ mkdir -p /mnt/containers-data/backups/jellyfin
 
 | File | Purpose |
 |---|---|
-| `ansible/roles/jellyfin/docker/docker-compose.yml` | Bind-mounts backup dir into Jellyfin container |
+| `containers/jellyfin/docker-compose.yml` | Bind-mounts backup dir into Jellyfin container |
 | `ansible/roles/restic/docker/docker-compose.yml` | Mounts host backup dir into resticprofile; sets `extra_hosts` and `JELLYFIN_API_KEY` |
 | `ansible/roles/restic/docker/profiles.d/jellyfin-onedrive.toml` | Defines source, run-before curl, cleanup, schedule, retention |
 | `ansible/roles/restic/templates/env.j2` | Renders `.env` file with `JELLYFIN_API_KEY` |
@@ -86,7 +86,7 @@ mkdir -p /mnt/containers-data/backups/jellyfin
 1. Create `/mnt/containers-data/backups/jellyfin` on ubuntu-01
 2. Generate API key: Jellyfin Dashboard → Admin → API Keys
 3. Add `JELLYFIN_API_KEY` to Ansible secrets
-4. `mise run jellyfin:up` — redeploy with new bind mount
+4. `just deploy-remote jellyfin` — deploy the Jellyfin container
 5. `mise run restic:up` — redeploy resticprofile
 
 ## Useful commands

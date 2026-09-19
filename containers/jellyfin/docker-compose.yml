@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8096:8096"          # HTTP web UI
+      - "${PORT:-8096}:8096"
       # - "8920:8920"        # HTTPS (optional)
       - "1900:1900/udp"      # DLNA discovery
       - "7359:7359/udp"      # Jellyfin client auto-discovery
@@ -13,8 +13,15 @@ services:
     volumes:
       - jellyfin_config:/config
       - jellyfin_cache:/cache
-      - /mnt/media:/media:ro
-      - /mnt/containers-data/backups/jellyfin:/config/data/backups
+      - type: bind
+        source: ${MEDIA_ROOT}
+        target: /media
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${JELLYFIN_BACKUP_DIR}
+        target: /config/data/backups
 
     environment:
       PUID: ${PUID}
