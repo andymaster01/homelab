@@ -8,12 +8,13 @@ services:
       - "${PORT:-80}:3000"
 
     volumes:
-      - type: bind
-        source: ${CONTAINERS_DATA}/config
-        target: /app/config
+      - homepage_config:/app/config
 
     environment:
       HOMEPAGE_ALLOWED_HOSTS: "*"
       PUID: 1000
       PGID: 100
       TZ: ${TZ:-America/Toronto}
+
+volumes:
+  homepage_config:

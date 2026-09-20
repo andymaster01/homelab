@@ -50,13 +50,15 @@ elif [[ "$remote_container_dir" != /* || "$remote_container_dir" == *..* || "$re
 fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
-container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
-if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
-  echo "CONTAINERS_DATA must be an absolute path without whitespace in $env_file" >&2
-  exit 1
+mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+if (( ${#item_paths[@]} > 0 )); then
+  container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
+  if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
+    echo "CONTAINERS_DATA must be an absolute path without whitespace in $env_file" >&2
+    exit 1
+  fi
 fi
 
-mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
 for item_path in "${item_paths[@]}"; do
   if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
     echo "Deployment item paths must be relative and contain no whitespace: $item_path" >&2
