@@ -51,6 +51,19 @@ fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
 mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+if ! jq -e '
+  def required_string: type == "string" and length > 0;
+  (.volume_seeds // [])
+  | type == "array"
+    and all(.[]; type == "object"
+      and (.source | required_string)
+      and (.service | required_string)
+      and (.target | required_string))
+' "$config_file" >/dev/null; then
+  echo "volume_seeds must be an array of entries with source, service, and target strings in $config_file" >&2
+  exit 1
+fi
+mapfile -t volume_seeds < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
 if (( ${#item_paths[@]} > 0 )); then
   container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
   if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
@@ -62,6 +75,26 @@ fi
 for item_path in "${item_paths[@]}"; do
   if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
     echo "Deployment item paths must be relative and contain no whitespace: $item_path" >&2
+    exit 1
+  fi
+done
+
+for volume_seed in "${volume_seeds[@]}"; do
+  IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
+  if [[ "$seed_source" = /* || "$seed_source" == *..* || "$seed_source" == *[[:space:]]* ]]; then
+    echo "Volume seed source must be relative and contain no whitespace: $seed_source" >&2
+    exit 1
+  fi
+  if [[ ! "$seed_service" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]; then
+    echo "Invalid volume seed service: $seed_service" >&2
+    exit 1
+  fi
+  if [[ "$seed_target" != /* || "$seed_target" == *..* || "$seed_target" == *[[:space:]]* ]]; then
+    echo "Volume seed target must be an absolute path without whitespace: $seed_target" >&2
+    exit 1
+  fi
+  if [[ ! -d "$compose_dir/$seed_source" ]]; then
+    echo "Volume seed source directory not found: $compose_dir/$seed_source" >&2
     exit 1
   fi
 done
@@ -90,6 +123,35 @@ for item_path in "${item_paths[@]}"; do
   echo "Copying deployment item: $item_path"
   ssh "$ssh_target" "mkdir -p '$container_data/$item_path'"
   scp -r "$source_dir/." "$ssh_target:$container_data/$item_path/"
+done
+
+for volume_seed in "${volume_seeds[@]}"; do
+  IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
+  echo "Copying volume seed: $seed_source"
+  ssh "$ssh_target" "mkdir -p '$remote_container_dir/$seed_source'"
+  scp -r "$compose_dir/$seed_source/." "$ssh_target:$remote_container_dir/$seed_source/"
+done
+
+for volume_seed in "${volume_seeds[@]}"; do
+  IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
+
+  echo "Creating service container for volume seed: $seed_service"
+  ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull '$seed_service' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml create '$seed_service'"
+
+  seed_container_id="$(ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml ps -aq '$seed_service' | head -n 1")"
+  if [[ -z "$seed_container_id" ]]; then
+    echo "Volume seed service container not found: $seed_service" >&2
+    exit 1
+  fi
+
+  if ! ssh "$ssh_target" "docker inspect '$seed_container_id'" | jq -e --arg target "$seed_target" \
+    '.[0].Mounts[] | select(.Destination == $target and .Type == "volume") | .Name' >/dev/null; then
+    echo "Volume seed target is not a named volume mount for $seed_service: $seed_target" >&2
+    exit 1
+  fi
+
+  echo "Seeding $seed_source into $seed_service:$seed_target"
+  ssh "$ssh_target" "docker cp '$remote_container_dir/$seed_source/.' '$seed_container_id:$seed_target/'"
 done
 
 echo "Starting $container_name remotely..."

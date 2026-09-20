@@ -37,6 +37,19 @@ fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
 mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+if ! jq -e '
+  def required_string: type == "string" and length > 0;
+  (.volume_seeds // [])
+  | type == "array"
+    and all(.[]; type == "object"
+      and (.source | required_string)
+      and (.service | required_string)
+      and (.target | required_string))
+' "$config_file" >/dev/null; then
+  echo "volume_seeds must be an array of entries with source, service, and target strings in $config_file" >&2
+  exit 1
+fi
+mapfile -t volume_seeds < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
 if (( ${#item_paths[@]} > 0 )); then
   container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
   if [[ -z "$container_data" ]]; then
@@ -71,10 +84,55 @@ for item_path in "${item_paths[@]}"; do
   cp -R "$source_dir/." "$destination_dir/"
 done
 
+for volume_seed in "${volume_seeds[@]}"; do
+  IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
+  if [[ "$seed_source" = /* || "$seed_source" == *..* || "$seed_source" == *[[:space:]]* ]]; then
+    echo "Volume seed source must be relative and contain no whitespace: $seed_source" >&2
+    exit 1
+  fi
+  if [[ ! "$seed_service" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]; then
+    echo "Invalid volume seed service: $seed_service" >&2
+    exit 1
+  fi
+  if [[ "$seed_target" != /* || "$seed_target" == *..* || "$seed_target" == *[[:space:]]* ]]; then
+    echo "Volume seed target must be an absolute path without whitespace: $seed_target" >&2
+    exit 1
+  fi
+  if [[ ! -d "$compose_dir/$seed_source" ]]; then
+    echo "Volume seed source directory not found: $compose_dir/$seed_source" >&2
+    exit 1
+  fi
+done
+
 if docker container inspect "$container_name" >/dev/null 2>&1 && [[ "$(docker inspect --format '{{.State.Running}}' "$container_name")" == "true" ]]; then
   echo "Stopping running container: $container_name"
   docker stop "$container_name"
 fi
+
+for volume_seed in "${volume_seeds[@]}"; do
+  IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
+
+  echo "Creating service container for volume seed: $seed_service"
+  PORT="$port" docker compose \
+    --env-file "$env_file" \
+    -f "$compose_file" \
+    create "$seed_service"
+
+  seed_container_id="$(PORT="$port" docker compose --env-file "$env_file" -f "$compose_file" ps -aq "$seed_service" | head -n 1)"
+  if [[ -z "$seed_container_id" ]]; then
+    echo "Volume seed service container not found: $seed_service" >&2
+    exit 1
+  fi
+
+  if ! docker inspect "$seed_container_id" | jq -e --arg target "$seed_target" \
+    '.[0].Mounts[] | select(.Destination == $target and .Type == "volume") | .Name' >/dev/null; then
+    echo "Volume seed target is not a named volume mount for $seed_service: $seed_target" >&2
+    exit 1
+  fi
+
+  echo "Seeding $seed_source into $seed_service:$seed_target"
+  docker cp "$compose_dir/$seed_source/." "$seed_container_id:$seed_target/"
+done
 
 echo "Deploying $container_name locally..."
 PORT="$port" docker compose \

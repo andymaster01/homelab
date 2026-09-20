@@ -1,5 +1,12 @@
 {
   "remote": "192.168.1.130",
   "remote_dir": "/home/ubuntu/homepage",
-  "port": 80
+  "port": 80,
+  "volume_seeds": [
+    {
+      "source": "config",
+      "service": "homepage",
+      "target": "/app/config"
+    }
+  ]
 }
