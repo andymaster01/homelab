@@ -36,22 +36,23 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
-
-container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
-if [[ -z "$container_data" ]]; then
-  echo "CONTAINERS_DATA is required in $env_file" >&2
-  exit 1
-fi
-
-if [[ "$container_data" = /* ]]; then
-  container_data_dir="$container_data"
-else
-  container_data_dir="$compose_dir/$container_data"
-fi
-mkdir -p "$container_data_dir"
-container_data_dir="$(cd -- "$container_data_dir" && pwd)"
-
 mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+if (( ${#item_paths[@]} > 0 )); then
+  container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
+  if [[ -z "$container_data" ]]; then
+    echo "CONTAINERS_DATA is required in $env_file when deployment items are configured" >&2
+    exit 1
+  fi
+
+  if [[ "$container_data" = /* ]]; then
+    container_data_dir="$container_data"
+  else
+    container_data_dir="$compose_dir/$container_data"
+  fi
+  mkdir -p "$container_data_dir"
+  container_data_dir="$(cd -- "$container_data_dir" && pwd)"
+fi
+
 for item_path in "${item_paths[@]}"; do
   if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
     echo "Deployment item paths must be relative and contain no whitespace: $item_path" >&2
