@@ -25,6 +25,7 @@ Use the existing style in each toolchain.
 - Ansible role names, tags, variables, and task files use snake_case, for example `filebrowser_quantum` and `jellyfin_dir`.
 - Terraform files stay split by concern (`main.tf`, `variables.tf`, `outputs.tf`) and should be formatted with `terraform fmt`.
 - Keep host-specific logic in playbooks or `host_vars`, not inside shared role defaults.
+- Docker image references must use explicit version tags; never use mutable tags such as `latest`.
 
 ## Testing Guidelines
 There is no dedicated automated test suite in this repo today. Validate changes with tool-native checks before opening a PR.
