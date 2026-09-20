@@ -6,6 +6,7 @@ deploy-remote container:
 
 prepare:
     ./scripts/prepare.sh 192.168.1.151
+    ./scripts/prepare.sh 192.168.1.130
 
 backup container:
     ./scripts/backup.sh {{container}}
