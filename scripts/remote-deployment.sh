@@ -41,11 +41,12 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-remote_container_dir="$(jq -r '.remote_dir // empty' "$config_file")"
-if [[ -z "$remote_container_dir" ]]; then
-  remote_container_dir="/home/ubuntu/compose/$container_name"
-elif [[ "$remote_container_dir" != /* || "$remote_container_dir" == *..* || "$remote_container_dir" == *[[:space:]]* ]]; then
-  echo "remote_dir must be an absolute path without whitespace in $config_file" >&2
+if ! remote_container_dir="$(jq -er '.remote_dir | strings | select(length > 0)' "$config_file")"; then
+  echo "remote_dir is required and must be an absolute path without whitespace in $config_file" >&2
+  exit 1
+fi
+if [[ "$remote_container_dir" != /* || "$remote_container_dir" == *..* || "$remote_container_dir" == *[[:space:]]* ]]; then
+  echo "remote_dir is required and must be an absolute path without whitespace in $config_file" >&2
   exit 1
 fi
 

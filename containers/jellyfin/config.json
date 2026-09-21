@@ -1,5 +1,6 @@
 {
   "remote": "192.168.1.130",
+  "remote_dir": "/home/ubuntu/compose/jellyfin",
   "port": 8096,
   "backup": {
     "stopContainer": true,
