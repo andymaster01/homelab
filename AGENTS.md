@@ -15,14 +15,14 @@ Prefer `mise` task wrappers over ad hoc commands.
 - `mise tasks` lists the supported workflows.
 - `mise run tf:images:init` and `mise run tf:vms:init` initialize Terraform modules.
 - `mise run tf:images:plan` or `mise run tf:vms:plan` previews infrastructure changes.
-- `mise run jellyfin:up` or `mise run deploy:fileserver` applies Ansible-managed services.
-- `cd ansible && ansible-playbook playbooks/ubuntu-01.yml --tags jellyfin --check` performs a dry run for role changes.
+- `just deploy-remote jellyfin` deploys Jellyfin to ubuntu-01 through the container scripts.
+- `just backup jellyfin` creates a retention-managed backup of the Jellyfin config volume.
 
 ## Coding Style & Naming Conventions
 Use the existing style in each toolchain.
 
 - YAML uses 2-space indentation and lowercase snake_case keys.
-- Ansible role names, tags, variables, and task files use snake_case, for example `filebrowser_quantum` and `jellyfin_dir`.
+- Ansible role names, tags, variables, and task files use snake_case, for example `filebrowser_quantum`.
 - Terraform files stay split by concern (`main.tf`, `variables.tf`, `outputs.tf`) and should be formatted with `terraform fmt`.
 - Keep host-specific logic in playbooks or `host_vars`, not inside shared role defaults.
 - Docker image references must use explicit version tags; never use mutable tags such as `latest`.

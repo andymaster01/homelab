@@ -171,7 +171,7 @@ ssh ubuntu@192.168.1.130 \
 # 4. Copy restored files back into the jellyfin_config Docker volume
 ssh ubuntu@192.168.1.130 \
   'docker run --rm \
-     -v jellyfin_config:/config \
+     -v jellyfin_jellyfin_config:/config \
      -v /tmp/jellyfin-restore/mnt/source/jellyfin:/restore:ro \
      alpine sh -c "cp -r /restore/. /config/"'
 
