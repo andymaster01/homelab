@@ -11,5 +11,9 @@ prepare:
 backup container:
     ./scripts/backup.sh {{container}}
 
+inventory:
+    @printf '\033[1;36mRepository inventory\033[0m\n\n'
+    @codex exec --model gpt-5.6-luna -c 'model_reasoning_effort="medium"' "$(cat prompts/repository-inventory.md)"
+
 commit:
     codex exec --model gpt-5.6-luna -c 'model_reasoning_effort="medium"' "Review all pending changes in this repository and commit them. Create a focused Conventional Commit message that accurately describes the changes. Do not modify files beyond what is necessary to make the commit."
