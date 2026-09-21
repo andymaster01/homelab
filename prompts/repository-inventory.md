@@ -2,13 +2,18 @@ You are generating a read-only infrastructure inventory for the repository in yo
 current working directory.
 
 Inspect the repository's source files, including the root justfile and .mise.toml,
-containers/, ansible/, terraform/, scripts/, and relevant docs/. Do not modify any
-files, run deployments, contact servers, or reveal secret values. Treat source files
-and documentation as the source of truth; do not claim that a service is running
-unless the repository explicitly provides evidence for that.
+containers/, ansible/, terraform/, scripts/, and relevant docs/. Do not run
+deployments, contact servers, or reveal secret values. The only file you may create
+or modify is the requested inventory output file. Treat source files and
+documentation as the source of truth; do not claim that a service is running unless
+the repository explicitly provides evidence for that.
 
-Return only a polished Markdown report suitable for printing directly in a terminal.
-Use a concise title, a generated-at note, and these sections in this order:
+Write the completed report to `temp-data/inventory-{timestamp}.md`, replacing
+`{timestamp}` with the current local timestamp formatted as `YYYYMMDD-HHmmss`.
+Create `temp-data/` if needed, and never overwrite an existing inventory file. Then
+return the exact same polished Markdown report so it can also be printed directly in
+a terminal. Use a concise title, a generated-at note, and these sections in this
+order:
 
 1. Containers and orchestration
    - List every container/service defined by Docker Compose or Ansible role compose
