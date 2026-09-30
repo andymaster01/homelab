@@ -49,3 +49,12 @@
             items: hosts.1.vms
             name: name
             label: ip
+    - dev-01 SSH user:
+        icon: mdi-account-key
+        widget:
+          type: customapi
+          url: http://homepage-data/servers.json
+          refreshInterval: 60000
+          mappings:
+            - field: hosts.1.vms.0.additional_info.ssh-user
+              label: SSH user
