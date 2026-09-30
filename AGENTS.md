@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This repository manages home infrastructure with `mise` and container configuration. Ansible and Terraform are legacy systems kept in the repository for historical reference only; they are no longer used.
+This repository manages home infrastructure with container configuration. Ansible and Terraform are legacy systems kept in the repository for historical reference only; they are no longer used.
 
 ### Legacy directories: `ansible/` and `terraform/`
 
@@ -9,9 +9,6 @@ This repository manages home infrastructure with `mise` and container configurat
 - `docs/` holds implementation notes and runbooks. `.env.example` documents expected environment variables; encrypted secrets live in `fnox.toml`.
 
 ## Build, Test, and Development Commands
-Prefer `mise` task wrappers over ad hoc commands.
-
-- `mise tasks` lists the supported workflows.
 - `just deploy-remote jellyfin` deploys Jellyfin to ubuntu-01 through the container scripts.
 - `just backup jellyfin` creates a retention-managed backup of the Jellyfin config volume.
 
@@ -24,7 +21,7 @@ Use the existing style in each active toolchain.
 ## Testing Guidelines
 There is no dedicated automated test suite in this repo today. Validate active configuration changes with their tool-native checks before opening a PR.
 
-- When editing Docker compose assets under a role, verify the matching `mise run <role>:up` task still succeeds.
+- When editing Docker Compose assets, verify the matching service workflow still succeeds.
 
 ## Commit & Pull Request Guidelines
 After every change, create a focused Git commit. Commit messages must use a Conventional Commits type prefix, such as `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, or `test:`; for example, `feat: add ansible setup` or `fix: repair suwayomi deployment`. Keep commits focused and descriptive.
@@ -36,4 +33,4 @@ PRs for active configuration should include:
 - screenshots when UI files are modified.
 
 ## Security & Configuration Tips
-Do not commit plaintext secrets. Add new variables to `.env.example` when needed, but store real values through `fnox.toml` and the existing `mise`/`fnox` setup.
+Do not commit plaintext secrets. Add new variables to `.env.example` when needed, but store real values through `fnox.toml` and the existing `fnox` setup.
