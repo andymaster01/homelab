@@ -1,10 +1,24 @@
 name: vikunja
 
 services:
+  vikunja-init:
+    image: busybox:1.37.0
+    container_name: vikunja-init
+    user: "0:0"
+    restart: "no"
+    command: ["sh", "-c", "chown -R 1000:1000 /db /files"]
+    volumes:
+      - vikunja_db:/db
+      - vikunja_files:/files
+
   vikunja:
     image: vikunja/vikunja:2.6.0
     container_name: vikunja
     restart: unless-stopped
+
+    depends_on:
+      vikunja-init:
+        condition: service_completed_successfully
 
     ports:
       - "${PORT:-3456}:3456"
