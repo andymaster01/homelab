@@ -162,6 +162,18 @@ for volume_seed in "${volume_seeds[@]}"; do
 done
 
 echo "Starting $container_name remotely..."
-ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
+if [[ "$container_name" == "vikunja" ]]; then
+  if [[ -z "${VIKUNJA_SERVICE_SECRET:-}" ]]; then
+    echo "VIKUNJA_SERVICE_SECRET is required. Run: fnox exec -- just deploy-remote vikunja" >&2
+    exit 1
+  fi
+
+  for compose_action in "pull" "up -d"; do
+    printf '%s\n' "$VIKUNJA_SERVICE_SECRET" | ssh "$ssh_target" \
+      "cd '$remote_container_dir' && IFS= read -r VIKUNJA_SERVICE_SECRET && export VIKUNJA_SERVICE_SECRET && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
+  done
+else
+  ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
+fi
 
 printf '\033[0;32mDone!\033[0m\n'
