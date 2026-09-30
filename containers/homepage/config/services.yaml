@@ -14,3 +14,38 @@
             items: items
             name: remote
             label: container_names
+
+- Infrastructure:
+    - Physical hosts:
+        icon: mdi-server
+        widget:
+          type: customapi
+          url: http://homepage-data/servers.json
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: hosts
+            name: name
+            label: ip
+    - bahamut VMs:
+        icon: mdi-server-network
+        widget:
+          type: customapi
+          url: http://homepage-data/servers.json
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: hosts.0.vms
+            name: name
+            label: ip
+    - eiko VMs:
+        icon: mdi-server-network
+        widget:
+          type: customapi
+          url: http://homepage-data/servers.json
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: hosts.1.vms
+            name: name
+            label: ip
