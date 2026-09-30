@@ -3,6 +3,10 @@
 ## Project Structure & Module Organization
 This repository manages home infrastructure with container configuration. Ansible and Terraform are legacy systems kept in the repository for historical reference only; they are no longer used.
 
+### Proxmox version
+
+- The Proxmox VE cluster runs version **9.1.1**. When researching Proxmox or giving Proxmox-specific instructions, verify that the information applies to Proxmox VE 9.1.1; do not rely on guidance for other versions without checking compatibility.
+
 ### Legacy directories: `ansible/` and `terraform/`
 
 - `ansible/` and `terraform/` contain legacy configuration retained for historical reference. During repository analysis or ordinary work, do not inspect, search, analyze, edit, or run commands against either directory. Only do so when the user explicitly asks for Ansible or Terraform.
