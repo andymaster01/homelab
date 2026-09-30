@@ -1,5 +1,5 @@
 {
-  "remote": "192.168.1.130",
+  "remote": "192.168.1.131",
   "remote_dir": "/home/ubuntu/compose/kavita",
   "port": 5000,
   "backup": {
