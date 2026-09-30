@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "name": "Coffee", "location": "Pantry" },
+    { "name": "Rice", "location": "Pantry" },
+    { "name": "Batteries", "location": "Utility drawer" }
+  ]
+}

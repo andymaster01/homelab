@@ -1,3 +1,16 @@
 ---
 # For configuration options and examples, please see:
 # https://gethomepage.dev/configs/services/
+
+- Home:
+    - Household items:
+        icon: mdi-home
+        widget:
+          type: customapi
+          url: http://homepage-data/household-items.json
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: name
+            label: location
