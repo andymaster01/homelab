@@ -51,7 +51,10 @@ if [[ "$remote_container_dir" != /* || "$remote_container_dir" == *..* || "$remo
 fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
-mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
+item_paths=()
+while IFS= read -r item_path; do
+  item_paths+=("$item_path")
+done < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
 if ! jq -e '
   def required_string: type == "string" and length > 0;
   (.volume_seeds // [])
@@ -64,7 +67,10 @@ if ! jq -e '
   echo "volume_seeds must be an array of entries with source, service, and target strings in $config_file" >&2
   exit 1
 fi
-mapfile -t volume_seeds < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
+volume_seeds=()
+while IFS= read -r volume_seed; do
+  volume_seeds+=("$volume_seed")
+done < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
 if (( ${#item_paths[@]} > 0 )); then
   container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
   if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
