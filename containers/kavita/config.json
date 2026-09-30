@@ -1,0 +1,16 @@
+{
+  "remote": "192.168.1.130",
+  "remote_dir": "/home/ubuntu/compose/kavita",
+  "port": 5000,
+  "backup": {
+    "stopContainer": true,
+    "destination": "/mnt/containers-data/backups/kavita",
+    "items": [
+      {
+        "path": "/var/lib/kavita/config",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}

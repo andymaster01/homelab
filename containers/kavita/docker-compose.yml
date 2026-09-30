@@ -1,0 +1,24 @@
+name: kavita
+
+services:
+  kavita:
+    image: jvmilazz0/kavita:0.9.1
+    container_name: kavita
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-5000}:5000"
+
+    volumes:
+      - type: bind
+        source: ${CONTAINERS_DATA}/config
+        target: /kavita/config
+      - type: bind
+        source: ${MEDIA_ROOT}
+        target: /media
+        read_only: true
+        bind:
+          create_host_path: false
+
+    environment:
+      TZ: ${TZ:-America/Toronto}
