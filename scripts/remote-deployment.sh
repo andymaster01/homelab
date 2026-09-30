@@ -84,10 +84,17 @@ while IFS= read -r secret_environment_variable; do
 done < <(jq -r '.secret_environment_variables // [] | .[]' "$config_file")
 secret_values=()
 remote_secret_reads=""
+if (( ${#secret_environment_variables[@]} > 0 )) && ! command -v fnox >/dev/null 2>&1; then
+  echo "fnox is required to load configured deployment secrets" >&2
+  exit 1
+fi
 for secret_environment_variable in "${secret_environment_variables[@]}"; do
-  secret_value="${!secret_environment_variable-}"
+  if ! secret_value="$(fnox get --config "$repo_root/fnox.toml" "$secret_environment_variable")"; then
+    echo "Could not load $secret_environment_variable from fnox" >&2
+    exit 1
+  fi
   if [[ -z "$secret_value" ]]; then
-    echo "$secret_environment_variable is required. Load secrets with fnox before deploying." >&2
+    echo "$secret_environment_variable is empty in fnox.toml" >&2
     exit 1
   fi
   secret_values+=("$secret_value")
