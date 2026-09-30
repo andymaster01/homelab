@@ -4,6 +4,9 @@ deploy-local container:
 deploy-remote container:
     ./scripts/remote-deployment.sh {{container}}
 
+scrap:
+    ./scripts/scrap.sh
+
 prepare:
     ./scripts/prepare.sh 192.168.1.151
     ./scripts/prepare.sh 192.168.1.130
