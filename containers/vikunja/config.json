@@ -1,5 +1,10 @@
 {
   "remote": "192.168.1.131",
   "remote_dir": "/home/ubuntu/compose/vikunja",
-  "port": 3456
+  "port": 3456,
+  "secret_environment_variables": ["VIKUNJA_SERVICE_SECRET"],
+  "data_directories": [
+    { "path": "db", "uid": 1000, "gid": 1000 },
+    { "path": "files", "uid": 1000, "gid": 1000 }
+  ]
 }

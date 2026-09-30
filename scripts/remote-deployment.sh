@@ -56,6 +56,44 @@ while IFS= read -r item_path; do
   item_paths+=("$item_path")
 done < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
 if ! jq -e '
+  def valid_path: type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._/-]*$") and (contains("..") | not);
+  (.data_directories // [])
+  | type == "array"
+    and all(.[]; type == "object"
+      and (.path | valid_path)
+      and (.uid | type == "number" and . >= 0 and . <= 65535 and floor == .)
+      and (.gid | type == "number" and . >= 0 and . <= 65535 and floor == .))
+' "$config_file" >/dev/null; then
+  echo "data_directories must contain relative paths and numeric uid/gid values in $config_file" >&2
+  exit 1
+fi
+data_directories=()
+while IFS= read -r data_directory; do
+  data_directories+=("$data_directory")
+done < <(jq -r '.data_directories // [] | .[] | [.path, (.uid | tostring), (.gid | tostring)] | @tsv' "$config_file")
+if ! jq -e '
+  (.secret_environment_variables // [])
+  | type == "array" and all(.[]; type == "string" and test("^[A-Z_][A-Z0-9_]*$"))
+' "$config_file" >/dev/null; then
+  echo "secret_environment_variables must contain valid environment variable names in $config_file" >&2
+  exit 1
+fi
+secret_environment_variables=()
+while IFS= read -r secret_environment_variable; do
+  secret_environment_variables+=("$secret_environment_variable")
+done < <(jq -r '.secret_environment_variables // [] | .[]' "$config_file")
+secret_values=()
+remote_secret_reads=""
+for secret_environment_variable in "${secret_environment_variables[@]}"; do
+  secret_value="${!secret_environment_variable-}"
+  if [[ -z "$secret_value" ]]; then
+    echo "$secret_environment_variable is required. Load secrets with fnox before deploying." >&2
+    exit 1
+  fi
+  secret_values+=("$secret_value")
+  remote_secret_reads+="IFS= read -r $secret_environment_variable && export $secret_environment_variable && "
+done
+if ! jq -e '
   def required_string: type == "string" and length > 0;
   (.volume_seeds // [])
   | type == "array"
@@ -71,7 +109,7 @@ volume_seeds=()
 while IFS= read -r volume_seed; do
   volume_seeds+=("$volume_seed")
 done < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
-if (( ${#item_paths[@]} > 0 )); then
+if (( ${#item_paths[@]} > 0 || ${#data_directories[@]} > 0 )); then
   container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
   if [[ -z "$container_data" || "$container_data" != /* || "$container_data" == *[[:space:]]* ]]; then
     echo "CONTAINERS_DATA must be an absolute path without whitespace in $env_file" >&2
@@ -82,6 +120,14 @@ fi
 for item_path in "${item_paths[@]}"; do
   if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
     echo "Deployment item paths must be relative and contain no whitespace: $item_path" >&2
+    exit 1
+  fi
+done
+
+for data_directory in "${data_directories[@]}"; do
+  IFS=$'\t' read -r data_path data_uid data_gid <<< "$data_directory"
+  if [[ ! "$data_path" =~ ^[a-zA-Z0-9][a-zA-Z0-9._/-]*$ || "$data_path" == *..* ]]; then
+    echo "Data directory path must be relative and contain only letters, numbers, dots, dashes, underscores, and slashes: $data_path" >&2
     exit 1
   fi
 done
@@ -132,6 +178,13 @@ for item_path in "${item_paths[@]}"; do
   scp -r "$source_dir/." "$ssh_target:$container_data/$item_path/"
 done
 
+for data_directory in "${data_directories[@]}"; do
+  IFS=$'\t' read -r data_path data_uid data_gid <<< "$data_directory"
+  data_directory_path="$container_data/$data_path"
+  echo "Preparing data directory: $data_path ($data_uid:$data_gid)"
+  ssh "$ssh_target" "sudo mkdir -p '$data_directory_path' && sudo chown '$data_uid:$data_gid' '$data_directory_path'"
+done
+
 for volume_seed in "${volume_seeds[@]}"; do
   IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
   echo "Copying volume seed: $seed_source"
@@ -162,15 +215,10 @@ for volume_seed in "${volume_seeds[@]}"; do
 done
 
 echo "Starting $container_name remotely..."
-if [[ "$container_name" == "vikunja" ]]; then
-  if [[ -z "${VIKUNJA_SERVICE_SECRET:-}" ]]; then
-    echo "VIKUNJA_SERVICE_SECRET is required. Run: fnox exec -- just deploy-remote vikunja" >&2
-    exit 1
-  fi
-
+if (( ${#secret_environment_variables[@]} > 0 )); then
   for compose_action in "pull" "up -d"; do
-    printf '%s\n' "$VIKUNJA_SERVICE_SECRET" | ssh "$ssh_target" \
-      "cd '$remote_container_dir' && IFS= read -r VIKUNJA_SERVICE_SECRET && export VIKUNJA_SERVICE_SECRET && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
+    printf '%s\n' "${secret_values[@]}" | ssh "$ssh_target" \
+      "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
   done
 else
   ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"

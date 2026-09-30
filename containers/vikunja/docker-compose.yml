@@ -1,37 +1,19 @@
 name: vikunja
 
 services:
-  vikunja-init:
-    image: busybox:1.37.0
-    container_name: vikunja-init
-    user: "0:0"
-    restart: "no"
-    command: ["sh", "-c", "chown -R 1000:1000 /db /files"]
-    volumes:
-      - vikunja_db:/db
-      - vikunja_files:/files
-
   vikunja:
     image: vikunja/vikunja:2.6.0
     container_name: vikunja
     restart: unless-stopped
 
-    depends_on:
-      vikunja-init:
-        condition: service_completed_successfully
-
     ports:
       - "${PORT:-3456}:3456"
 
     volumes:
-      - vikunja_db:/db
-      - vikunja_files:/app/vikunja/files
+      - ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/db:/db
+      - ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/files:/app/vikunja/files
 
     environment:
       VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL:?Set VIKUNJA_SERVICE_PUBLICURL in the environment file}
       VIKUNJA_SERVICE_SECRET: ${VIKUNJA_SERVICE_SECRET:?Set VIKUNJA_SERVICE_SECRET in the environment file}
       TZ: ${TZ:-America/Toronto}
-
-volumes:
-  vikunja_db:
-  vikunja_files:

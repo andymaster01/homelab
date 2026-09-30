@@ -38,6 +38,19 @@ fi
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
 mapfile -t item_paths < <(jq -er '.items // [] | .[] | select(.type == "folder") | .path | strings | select(length > 0)' "$config_file")
 if ! jq -e '
+  def valid_path: type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._/-]*$") and (contains("..") | not);
+  (.data_directories // [])
+  | type == "array"
+    and all(.[]; type == "object"
+      and (.path | valid_path)
+      and (.uid | type == "number" and . >= 0 and . <= 65535 and floor == .)
+      and (.gid | type == "number" and . >= 0 and . <= 65535 and floor == .))
+' "$config_file" >/dev/null; then
+  echo "data_directories must contain relative paths and numeric uid/gid values in $config_file" >&2
+  exit 1
+fi
+mapfile -t data_directories < <(jq -r '.data_directories // [] | .[] | [.path, (.uid | tostring), (.gid | tostring)] | @tsv' "$config_file")
+if ! jq -e '
   def required_string: type == "string" and length > 0;
   (.volume_seeds // [])
   | type == "array"
@@ -50,7 +63,7 @@ if ! jq -e '
   exit 1
 fi
 mapfile -t volume_seeds < <(jq -r '.volume_seeds // [] | .[] | [.source, .service, .target] | @tsv' "$config_file")
-if (( ${#item_paths[@]} > 0 )); then
+if (( ${#item_paths[@]} > 0 || ${#data_directories[@]} > 0 )); then
   container_data="$(awk -F= '$1 == "CONTAINERS_DATA" {sub(/^[^=]*=/, ""); print; exit}' "$env_file")"
   if [[ -z "$container_data" ]]; then
     echo "CONTAINERS_DATA is required in $env_file when deployment items are configured" >&2
@@ -65,6 +78,14 @@ if (( ${#item_paths[@]} > 0 )); then
   mkdir -p "$container_data_dir"
   container_data_dir="$(cd -- "$container_data_dir" && pwd)"
 fi
+
+for data_directory in "${data_directories[@]}"; do
+  IFS=$'\t' read -r data_path data_uid data_gid <<< "$data_directory"
+  if [[ ! "$data_path" =~ ^[a-zA-Z0-9][a-zA-Z0-9._/-]*$ || "$data_path" == *..* ]]; then
+    echo "Data directory path must be relative and contain only letters, numbers, dots, dashes, underscores, and slashes: $data_path" >&2
+    exit 1
+  fi
+done
 
 for item_path in "${item_paths[@]}"; do
   if [[ "$item_path" = /* || "$item_path" == *..* || "$item_path" == *[[:space:]]* ]]; then
@@ -82,6 +103,12 @@ for item_path in "${item_paths[@]}"; do
   echo "Copying deployment item: $item_path"
   mkdir -p "$destination_dir"
   cp -R "$source_dir/." "$destination_dir/"
+done
+
+for data_directory in "${data_directories[@]}"; do
+  IFS=$'\t' read -r data_path data_uid data_gid <<< "$data_directory"
+  echo "Preparing data directory: $data_path"
+  mkdir -p "$container_data_dir/$data_path"
 done
 
 for volume_seed in "${volume_seeds[@]}"; do
