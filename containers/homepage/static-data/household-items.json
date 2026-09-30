@@ -1,7 +1,20 @@
 {
   "items": [
-    { "name": "Coffee", "location": "Pantry" },
-    { "name": "Rice", "location": "Pantry" },
-    { "name": "Batteries", "location": "Utility drawer" }
+    {
+      "remote": "192.168.1.130",
+      "containers": [
+        "homepage",
+        "homepage-data",
+        "jellyfin"
+      ],
+      "container_names": "homepage, homepage-data, jellyfin"
+    },
+    {
+      "remote": "192.168.1.151",
+      "containers": [
+        "audiobookshelf"
+      ],
+      "container_names": "audiobookshelf"
+    }
   ]
 }

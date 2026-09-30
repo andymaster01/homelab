@@ -3,7 +3,7 @@
 # https://gethomepage.dev/configs/services/
 
 - Home:
-    - Household items:
+    - Containers:
         icon: mdi-home
         widget:
           type: customapi
@@ -12,5 +12,5 @@
           display: dynamic-list
           mappings:
             items: items
-            name: name
-            label: location
+            name: remote
+            label: container_names
