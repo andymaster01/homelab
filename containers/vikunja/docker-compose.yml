@@ -1,0 +1,23 @@
+name: vikunja
+
+services:
+  vikunja:
+    image: vikunja/vikunja:2.6.0
+    container_name: vikunja
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-3456}:3456"
+
+    volumes:
+      - vikunja_db:/db
+      - vikunja_files:/app/vikunja/files
+
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL:?Set VIKUNJA_SERVICE_PUBLICURL in the environment file}
+      VIKUNJA_SERVICE_SECRET: ${VIKUNJA_SERVICE_SECRET:?Set VIKUNJA_SERVICE_SECRET in the environment file}
+      TZ: ${TZ:-America/Toronto}
+
+volumes:
+  vikunja_db:
+  vikunja_files:

@@ -1,0 +1,5 @@
+{
+  "remote": "192.168.1.151",
+  "remote_dir": "/home/ubuntu/compose/vikunja",
+  "port": 3456
+}
