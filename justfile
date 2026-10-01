@@ -21,5 +21,8 @@ create-inventory-source:
 create-inventory-website:
     @codex exec --model gpt-6-luna -c 'model_reasoning_effort="medium"' "$(cat prompts/generate-inventory-website.md) Inventory file: summary/inventory.md"
 
+open-inventory-website:
+    open summary/inventory/index.html
+
 commit:
     codex exec --model gpt-6-luna -c 'model_reasoning_effort="medium"' "Review all pending changes in this repository and commit them. Create a focused Conventional Commit message that accurately describes the changes. Do not modify files beyond what is necessary to make the commit."
