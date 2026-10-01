@@ -8,12 +8,10 @@ or modify is the requested inventory output file. Treat source files and
 documentation as the source of truth; do not claim that a service is running unless
 the repository explicitly provides evidence for that.
 
-Write the completed report to `temp-data/inventory-{timestamp}.md`, replacing
-`{timestamp}` with the current local timestamp formatted as `YYYYMMDD-HHmmss`.
-Create `temp-data/` if needed, and never overwrite an existing inventory file. Then
-return the exact same polished Markdown report so it can also be printed directly in
-a terminal. Use a concise title, a generated-at note, and these sections in this
-order:
+Write the completed report to `summary/inventory.md`. Create `summary/` if needed
+and overwrite `summary/inventory.md` on each run. Then return the exact same
+polished Markdown report so it can also be printed directly in a terminal. Use a
+concise title, a generated-at note, and these sections in this order:
 
 1. Containers and orchestration
    - List every container/service defined by Docker Compose or Ansible role compose

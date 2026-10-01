@@ -7,9 +7,8 @@ readable static website.
 - Read that file as the sole source of inventory facts. Do not scan the repository
   or consult other files to fill gaps.
 - Create a sibling output directory named after the input file without its `.md`
-  extension. For example, for
-  `temp-data/inventory-20260920-203522.md`, write the website to
-  `temp-data/inventory-20260920-203522/`.
+  extension. For example, for `summary/inventory.md`, write the website to
+  `summary/inventory/`.
 - Put the complete website in that directory, with `index.html` as its entry
   point. Keep the site self-contained: use local HTML, CSS, and JavaScript only,
   with no remote fonts, scripts, stylesheets, images, analytics, or build tools.
