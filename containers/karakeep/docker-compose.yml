@@ -1,0 +1,50 @@
+name: karakeep
+
+services:
+  karakeep:
+    image: ghcr.io/karakeep-app/karakeep:0.33.2
+    container_name: karakeep
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-3000}:3000"
+
+    volumes:
+      - data:/data
+
+    environment:
+      DATA_DIR: /data
+      NEXTAUTH_URL: ${KARAKEEP_PUBLIC_URL:?Set KARAKEEP_PUBLIC_URL in the environment file}
+      NEXTAUTH_SECRET: ${KARAKEEP_NEXTAUTH_SECRET:?Load KARAKEEP_NEXTAUTH_SECRET from fnox}
+      MEILI_ADDR: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY:?Load KARAKEEP_MEILI_MASTER_KEY from fnox}
+      BROWSER_WEB_URL: http://chrome:9222
+      TZ: ${TZ:-America/Toronto}
+
+    depends_on:
+      - chrome
+      - meilisearch
+
+  chrome:
+    image: ghcr.io/karakeep-app/karakeep-chrome:151.0.7922.47-r1
+    restart: unless-stopped
+    init: true
+    command:
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --hide-scrollbars
+      - --disable-blink-features=AutomationControlled
+      - --window-size=1440,900
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.41.0
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY:?Load KARAKEEP_MEILI_MASTER_KEY from fnox}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilisearch:/meili_data
+
+volumes:
+  data:
+  meilisearch:

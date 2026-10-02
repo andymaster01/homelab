@@ -1,0 +1,9 @@
+{
+  "remote": "192.168.1.131",
+  "remote_dir": "/home/ubuntu/compose/karakeep",
+  "port": 3000,
+  "secret_environment_variables": [
+    "KARAKEEP_NEXTAUTH_SECRET",
+    "KARAKEEP_MEILI_MASTER_KEY"
+  ]
+}
