@@ -22,6 +22,10 @@
         - icon: vikunja
           href: http://192.168.1.131:3456/
 
+    - Karakeep:
+        - icon: karakeep
+          href: http://192.168.1.131:3000/
+
 - Media:
     - Suwayomi:
         - icon: suwayomi
