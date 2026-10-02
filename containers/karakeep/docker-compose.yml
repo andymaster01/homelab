@@ -19,6 +19,8 @@ services:
       MEILI_ADDR: http://meilisearch:7700
       MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY:?Load KARAKEEP_MEILI_MASTER_KEY from fnox}
       BROWSER_WEB_URL: http://chrome:9222
+      CRAWLER_VIDEO_DOWNLOAD: "true"
+      CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE: ${CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE:-50}
       TZ: ${TZ:-America/Toronto}
 
     depends_on:

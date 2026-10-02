@@ -33,4 +33,6 @@ The `karakeep_data` Docker volume stores the database and saved assets. The `kar
 
 Update the pinned image versions and deploy again to upgrade. Follow Karakeep's [Meilisearch migration guidance](https://docs.karakeep.app/administration/troubleshooting/) before upgrading Meilisearch.
 
+Video downloads are enabled with a 50 MB maximum per video. Change `CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE` in the environment file to adjust the cap. Downloaded videos use the Karakeep data volume, so keep an eye on disk usage.
+
 AI tagging is optional and requires an inference provider; this setup uses the standard bookmarking, search, and page capture features without configuring one.
