@@ -15,10 +15,10 @@ backup container:
     ./scripts/backup.sh {{container}}
 
 vm-validate definition:
-    python3 scripts/proxmox-vm.py validate {{definition}}
+    node scripts/proxmox-vm.mjs validate {{definition}}
 
 vm-create definition:
-    python3 scripts/proxmox-vm.py create {{definition}}
+    node scripts/proxmox-vm.mjs create {{definition}}
 
 create-inventory-source:
     @printf '\033[1;36mRepository inventory\033[0m\n\n'

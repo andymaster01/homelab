@@ -34,8 +34,8 @@ certificate is trusted by the machine running the tool.
 From the repository root:
 
 ```bash
-python3 scripts/proxmox-vm.py validate vm-definitions/app-01.json
-python3 scripts/proxmox-vm.py create vm-definitions/app-01.json
+node scripts/proxmox-vm.mjs validate vm-definitions/app-01.json
+node scripts/proxmox-vm.mjs create vm-definitions/app-01.json
 ```
 
 Validation checks the VM definition, SSH public key, node, target storage,
