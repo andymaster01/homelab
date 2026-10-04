@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Source-based inventory of infrastructure configuration, hosts, services, and documented relationships.">
+  <title>Infrastructure Inventory</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Infrastructure · Source-based inventory</p>
+      <h1>Infrastructure Inventory</h1>
+      <p class="lede">A map of documented services, hosts, and configuration relationships.</p>
+      <p class="generated">Generated <time datetime="2026-10-01">2026-10-01</time></p>
+      <p class="notice"><strong>Scope:</strong> This inventory does not assert that any listed service or VM is currently running. It distinguishes explicit configuration from documentation-only or inferred data. Sensitive values are omitted.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Page sections">
+      <p class="nav-title">On this page</p>
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#services">Containers &amp; orchestration</a>
+        <a href="#servers">Managed servers</a>
+        <a href="#tools">Ansible vs Terraform</a>
+        <a href="#configuration">Server configuration</a>
+      </nav>
+    </aside>
+
+    <main id="main">
+      <section id="overview" class="section overview">
+        <p class="eyebrow">At a glance</p>
+        <h2>Inventory overview</h2>
+        <div class="stats" aria-label="Inventory counts">
+          <div class="stat"><strong>15</strong><span>service/container entries</span></div>
+          <div class="stat"><strong>5</strong><span>Ansible inventory hosts</span></div>
+          <div class="stat"><strong>4</strong><span>Terraform VM definitions</span></div>
+        </div>
+        <div class="callout-grid">
+          <article class="callout mismatch"><h3>Documented mismatch</h3><p>Homepage static server data uses <code>eiko</code> at <code>192.168.1.102</code> and guest labels <code>eiko-01-150</code>/<code>eiko-02-151</code>. Ansible and Terraform instead name those guests <code>monitoring-01</code> (<code>.150</code>) and <code>db-pg-01</code> (<code>.151</code>).</p></article>
+          <article class="callout documentation"><h3>Proposed monitoring</h3><p>Pushgateway, Prometheus, and Grafana are documentation-only proposals. The monitoring Ansible role and Compose files are not present.</p></article>
+          <article class="callout inferred"><h3>Inferred handoff</h3><p>The apparent sequence is Terraform VM provisioning followed by Ansible host configuration. The source does not establish that either tool has been applied successfully.</p></article>
+        </div>
+      </section>
+
+      <section id="services" class="section">
+        <p class="eyebrow">01 · Workloads</p><h2>Containers and orchestration</h2>
+        <p class="section-intro">Endpoints are configured host port mappings or explicitly documented URLs. A port mapping without an explicit host IP binds according to Docker's default behavior; no host bind address is specified here. “Management” names the repository task or Ansible role when present.</p>
+        <label class="filter-label" for="service-filter">Filter service entries</label>
+        <input id="service-filter" type="search" placeholder="Search name, host, port, or notes" aria-describedby="filter-help">
+        <p id="filter-help" class="hint">Filtering is optional; all entries are listed below when JavaScript is unavailable.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Service inventory table, scroll horizontally on narrow screens">
+          <table id="service-table"><thead><tr><th>Service / container</th><th>Apparent host</th><th>Management path</th><th>Host ports / protocol</th><th>Explicit URL or notes</th></tr></thead><tbody>
+            <tr><td><strong>Jellyfin</strong><br><code>jellyfin</code></td><td><code>ubuntu-01</code><br><code>192.168.1.130</code></td><td><code>just deploy-remote jellyfin</code>; backup: <code>just backup jellyfin</code>; <code>containers/jellyfin/config.json</code></td><td><code>8096/tcp</code>, <code>1900/udp</code>, <code>7359/udp</code>; optional <code>8920/tcp</code> commented out</td><td><a href="http://192.168.1.130:8096/">192.168.1.130:8096</a> in Homepage bookmarks; Compose: <code>containers/jellyfin/docker-compose.yml</code></td></tr>
+            <tr><td><strong>Homepage</strong><br><code>homepage</code></td><td><code>ubuntu-01</code><br><code>192.168.1.130</code></td><td><code>just deploy-remote homepage</code></td><td>Configured host port defaults to <code>80/tcp</code> → container <code>3000/tcp</code></td><td><code>containers/homepage/config.json</code>; URL/host inferred from this and <code>containers/homepage/docker-compose.yml</code></td></tr>
+            <tr><td><strong>Homepage data</strong><br><code>homepage-data</code> · nginx sidecar</td><td><code>ubuntu-01</code>, same Compose project</td><td><code>just deploy-remote homepage</code></td><td>None published</td><td>Serves static JSON on internal Compose network; <code>containers/homepage/docker-compose.yml</code>, <code>docs/homepage-custom-data.md</code></td></tr>
+            <tr><td><strong>File Browser Quantum</strong><br><code>filebrowser</code></td><td><code>ubuntu-01</code><br><code>192.168.1.130</code></td><td><code>mise filebrowser:up</code> / Ansible role <code>filebrowser_quantum</code></td><td><code>8010/tcp</code> → <code>80/tcp</code></td><td><a href="http://192.168.1.130:8010/">192.168.1.130:8010</a> in Homepage bookmarks; role Compose: <code>ansible/roles/filebrowser_quantum/docker/docker-compose.yaml</code></td></tr>
+            <tr><td><strong>Resticprofile</strong><br><code>resticprofile</code></td><td><code>ubuntu-01</code><br><code>192.168.1.130</code></td><td><code>mise restic:up</code> / Ansible role <code>restic</code></td><td>None published</td><td>Ansible Compose: <code>ansible/roles/restic/docker/docker-compose.yml</code>; backup targets/profile behavior documented in <code>docs/backup-how-to-restore.md</code> and <code>docs/backup-jellyfin.md</code></td></tr>
+            <tr><td><strong>Suwayomi</strong><br><code>suwayomi</code></td><td><code>ubuntu-02</code><br><code>192.168.1.131</code></td><td><code>mise manga:up</code> / Ansible role <code>manga</code></td><td><code>4567/tcp</code></td><td><a href="http://192.168.1.131:4567/">192.168.1.131:4567</a> in Homepage bookmarks; Compose: <code>ansible/roles/manga/docker/docker-compose.yml</code></td></tr>
+            <tr><td><strong>FlareSolverr / Byparr</strong><br><code>flaresolverr</code></td><td><code>ubuntu-02</code><br><code>192.168.1.131</code></td><td><code>mise manga:up</code> / Ansible role <code>manga</code></td><td>None published</td><td>Internal URL configured for Suwayomi: <code>http://flaresolverr:8191</code>; image/service name appears in role Compose</td></tr>
+            <tr><td><strong>Komga</strong><br><code>komga</code></td><td><code>ubuntu-02</code><br><code>192.168.1.131</code></td><td><code>mise manga:up</code> / Ansible role <code>manga</code></td><td><code>25600/tcp</code></td><td><a href="http://192.168.1.131:25600/">192.168.1.131:25600</a> in Homepage bookmarks</td></tr>
+            <tr><td><strong>Vikunja</strong><br><code>vikunja</code></td><td><code>ubuntu-02</code><br><code>192.168.1.131</code></td><td><code>just deploy-remote vikunja</code></td><td>Configured host port defaults to <code>3456/tcp</code> → <code>3456/tcp</code></td><td><a href="http://192.168.1.131:3456/">192.168.1.131:3456</a> in Homepage bookmarks; <code>containers/vikunja/config.json</code></td></tr>
+            <tr><td><strong>Kavita</strong><br><code>kavita</code></td><td><code>ubuntu-02</code><br><code>192.168.1.131</code></td><td><code>just deploy-remote kavita</code></td><td>Configured host port defaults to <code>5000/tcp</code> → <code>5000/tcp</code></td><td><a href="http://192.168.1.131:5000/">192.168.1.131:5000</a> in Homepage bookmarks; <code>containers/kavita/config.json</code></td></tr>
+            <tr><td><strong>Audiobookshelf</strong><br><code>audiobookshelf</code></td><td><code>db-pg-01</code><br><code>192.168.1.151</code></td><td><code>just deploy-remote audiobookshelf</code></td><td>Configured host port defaults to <code>13378/tcp</code> → container <code>80/tcp</code></td><td><a href="http://192.168.1.151:13378/">192.168.1.151:13378</a> in Homepage bookmarks; <code>containers/audiobookshelf/config.json</code></td></tr>
+            <tr><td><strong>PostgreSQL 18</strong><br><code>postgresql18</code></td><td><code>db-pg-01</code><br><code>192.168.1.151</code></td><td><code>mise postgresql18:up</code> / Ansible role <code>postgresql18</code></td><td><code>5432/tcp</code></td><td>Ansible Compose: <code>ansible/roles/postgresql18/docker/docker-compose.yml</code></td></tr>
+            <tr class="doc-row"><td><strong>Pushgateway</strong><br><code>pushgateway</code></td><td>Proposed <code>monitoring-01</code><br><code>192.168.1.150</code></td><td><span class="tag documentation">Documentation-only</span> proposed Ansible role <code>monitoring</code>; intended mise task <code>monitoring:up</code></td><td>Proposed <code>9091/tcp</code></td><td>Described in <code>docs/implementation-grafana-monitoring.md</code>; role/Compose files are not present</td></tr>
+            <tr class="doc-row"><td><strong>Prometheus</strong><br><code>prometheus</code></td><td>Proposed <code>monitoring-01</code><br><code>192.168.1.150</code></td><td><span class="tag documentation">Documentation-only</span> proposed Ansible role <code>monitoring</code></td><td>Proposed <code>9090/tcp</code></td><td>Proposed in <code>docs/implementation-grafana-monitoring.md</code>; scrape target Pushgateway: <code>pushgateway:9091</code></td></tr>
+            <tr class="doc-row"><td><strong>Grafana</strong><br><code>grafana</code></td><td>Proposed <code>monitoring-01</code><br><code>192.168.1.150</code></td><td><span class="tag documentation">Documentation-only</span> proposed Ansible role <code>monitoring</code></td><td>Proposed <code>3000/tcp</code></td><td>Proposed URL <code>http://192.168.1.150:3000</code> in <code>docs/implementation-grafana-monitoring.md</code></td></tr>
+          </tbody></table>
+        </div>
+        <details class="source-note"><summary>Compose source coverage and image tags</summary><p>Compose sources are <code>containers/{audiobookshelf,homepage,jellyfin,kavita,vikunja}/docker-compose.yml</code> and Ansible role Compose files under <code>ansible/roles/{filebrowser_quantum,manga,postgresql18,restic}/docker/</code>. Role Compose files configure containers, but repository configuration alone does not establish runtime status. Some images use mutable tags (<code>stable</code> or <code>latest</code>) in role Compose files.</p></details>
+      </section>
+
+      <section id="servers" class="section">
+        <p class="eyebrow">02 · Hosts</p><h2>Managed servers</h2>
+        <div class="split-tables">
+          <div><h3>Ansible inventory</h3><p class="hint"><code>ansible/inventory.yml</code></p><div class="table-wrap" tabindex="0" role="region" aria-label="Ansible inventory table, scroll horizontally on narrow screens"><table><thead><tr><th>Name</th><th>IP</th><th>Role / group</th></tr></thead><tbody>
+            <tr><td><code>ubuntu-01</code></td><td><code>192.168.1.130</code></td><td><code>app_servers</code></td></tr><tr><td><code>ubuntu-02</code></td><td><code>192.168.1.131</code></td><td><code>app_servers</code></td></tr><tr><td><code>bahamut</code></td><td><code>192.168.1.101</code></td><td><code>file_servers</code></td></tr><tr><td><code>monitoring-01</code></td><td><code>192.168.1.150</code></td><td><code>monitoring_servers</code></td></tr><tr><td><code>db-pg-01</code></td><td><code>192.168.1.151</code></td><td><code>db_servers</code></td></tr>
+          </tbody></table></div></div>
+          <div><h3>Terraform VM definitions</h3><p class="hint"><code>terraform/proxmox/vms/terraform.tfvars</code></p><div class="table-wrap" tabindex="0" role="region" aria-label="Terraform virtual machine table, scroll horizontally on narrow screens"><table><thead><tr><th>Name</th><th>IP</th><th>Proxmox node / VM ID</th></tr></thead><tbody>
+            <tr><td><code>ubuntu-01</code></td><td><code>192.168.1.130/24</code></td><td><code>bahamut</code> / 200</td></tr><tr><td><code>ubuntu-02</code></td><td><code>192.168.1.131/24</code></td><td><code>bahamut</code> / 202</td></tr><tr><td><code>monitoring-01</code></td><td><code>192.168.1.150/24</code></td><td><code>eiko</code> / 201</td></tr><tr><td><code>db-pg-01</code></td><td><code>192.168.1.151/24</code></td><td><code>eiko</code> / 203</td></tr>
+          </tbody></table></div></div>
+        </div>
+        <div class="callout mismatch"><h3>Differences and cross-checks</h3><ul><li><code>bahamut</code> is an Ansible file-server host, but not a Terraform VM; Terraform uses it as a Proxmox node.</li><li>The four Terraform VMs match four Ansible hosts by name and address. No Ansible host is absent from the Terraform VM list after accounting for <code>bahamut</code> as the physical/hypervisor host.</li><li>Homepage static inventory (<code>containers/homepage/static-data/servers.json</code>) lists <code>eiko</code> at <code>192.168.1.102</code> and guest labels <code>eiko-01-150</code> and <code>eiko-02-151</code>; those disagree with Terraform/Ansible names and addresses.</li><li>Homepage also lists <code>dev-01</code> (<code>192.168.1.35</code>, VM ID 105), absent from both management inventories. These Homepage entries are display data, not Terraform VM definitions.</li></ul></div>
+      </section>
+
+      <section id="tools" class="section">
+        <p class="eyebrow">03 · Provisioning and configuration</p><h2>Ansible vs Terraform</h2>
+        <div class="cards two">
+          <article class="detail-card"><h3>Ansible</h3><p>Uses <code>ansible/inventory.yml</code> and five playbooks:</p><ul><li><code>bahamut.yml</code> applies ZFS, NFS, and Samba roles to <code>file_servers</code>.</li><li><code>ubuntu-01.yml</code> applies NFS client, File Browser Quantum, and Restic roles.</li><li><code>ubuntu-02.yml</code> applies NFS client and Manga.</li><li><code>db-pg-01.yml</code> applies NFS client, PostgreSQL 18, and PostgreSQL backup.</li><li><code>monitoring-01.yml</code> currently applies only NFS client.</li></ul><p>Roles under <code>ansible/roles/</code> configure datasets and file sharing, NFS mounts, Docker Compose applications, and daily PostgreSQL dumps. <code>ansible/roles/monitoring</code> is not present; monitoring is only specified as a proposed implementation in <code>docs/implementation-grafana-monitoring.md</code>.</p></article>
+          <article class="detail-card"><h3>Terraform</h3><p>Two Proxmox modules are described:</p><ul><li><code>terraform/proxmox/images/</code> downloads the Ubuntu 24.04 Noble cloud image to nodes <code>bahamut</code> and <code>eiko</code> (storage <code>local</code>).</li><li><code>terraform/proxmox/vms/</code> defines four VMs, creates per-VM cloud-init snippets, and configures guest agent, CPU/memory/disk, <code>vmbr0</code> networking, static IPv4/gateway, DNS, and an Ubuntu account/SSH public key.</li></ul><p>Defaults in <code>terraform/proxmox/vms/variables.tf</code>: 2 CPU cores, 4096 MB memory, 16 GB disk, DNS <code>1.1.1.1</code>, bridge <code>vmbr0</code>, storage <code>local-lvm</code>, username <code>ubuntu</code>. Per-VM overrides are in tfvars. <code>vendor-cloud-init.yaml</code> installs Docker Engine and Compose plugin and enables the guest agent.</p></article>
+        </div>
+        <div class="callout inferred"><h3>Apparent handoff · inferred</h3><p>Terraform provisions Proxmox VMs, network configuration, cloud-init, and Docker prerequisites; Ansible then targets named hosts and configures OS-level services, mounts, file-server behavior, and application Compose deployments. This sequence is inferred from Terraform cloud-init and Ansible inventory/playbooks. The repository provides no evidence here that either tool has been applied successfully or that workloads are currently running.</p></div>
+      </section>
+
+      <section id="configuration" class="section">
+        <p class="eyebrow">04 · Per-host details</p><h2>Server configuration</h2>
+        <div class="server-list">
+          <article class="server-card"><header><h3><code>bahamut</code></h3><span class="ip">192.168.1.101</span></header><h4>Configured services and settings</h4><p>ZFS datasets, NFS server, and Samba shares. NFS exports allow <code>192.168.1.0/24</code> with read/write, sync, all-squash to UID/GID 1000. Samba shares use a configured account; secret omitted.</p><h4>Storage and ownership</h4><p>Pool <code>zfs-data</code>; datasets mounted at <code>/mnt/media</code>, <code>/mnt/photos-videos</code>, <code>/mnt/containers-data</code>, <code>/mnt/photos-videos-test</code>; directories owned UID/GID 1000.</p><p class="sources"><strong>Sources:</strong> <code>ansible/host_vars/bahamut.yml</code>; <code>ansible/roles/fileserver_{zfs,nfs,samba}/</code>; <code>docs/storage.md</code></p></article>
+          <article class="server-card"><header><h3><code>ubuntu-01</code></h3><span class="ip">192.168.1.130</span></header><h4>Configured services</h4><p>Jellyfin, Homepage and its Nginx static-data sidecar, File Browser Quantum, Resticprofile.</p><h4>Storage, mounts, backups, and users</h4><p>NFS client mounts <code>/mnt/photos-videos-test</code>, <code>/mnt/media</code>, <code>/mnt/containers-data</code>, and <code>/mnt/photos-videos</code> from <code>192.168.1.101</code>. Consumers include Jellyfin (media read-only), File Browser (multiple shares read/write), Resticprofile (photos/videos and backup roots read-only). Jellyfin config is backed up to <code>/mnt/containers-data/backups/jellyfin</code>; docs describe OneDrive restic backup. Photos/Jellyfin schedules and retention are documented; some profiles are explicitly described as disabled. Login account in Ansible inventory: <code>ubuntu</code>.</p><p class="sources"><strong>Sources:</strong> <code>ansible/playbooks/ubuntu-01.yml</code>; <code>ansible/roles/nfs_client/</code>; <code>containers/jellyfin/</code>; <code>containers/homepage/</code>; <code>ansible/roles/filebrowser_quantum/</code>; <code>ansible/roles/restic/</code>; <code>docs/backup-how-to-restore.md</code>; <code>docs/backup-jellyfin.md</code>; <code>docs/storage.md</code></p></article>
+          <article class="server-card"><header><h3><code>ubuntu-02</code></h3><span class="ip">192.168.1.131</span></header><h4>Configured services</h4><p>Suwayomi, FlareSolverr/Byparr, Komga. Vikunja and Kavita are assigned here by their deployment metadata and Homepage links.</p><h4>Storage and users</h4><p>Manga app data under <code>/home/ubuntu/manga</code>; downloads on <code>/mnt/containers-data/manga-downloads</code>. NFS client role configures the same four mounts as other clients. Vikunja stores DB/files under <code>${CONTAINERS_DATA}</code>; Kavita config and media use configured bind mounts. Login account: <code>ubuntu</code>.</p><p class="sources"><strong>Sources:</strong> <code>ansible/playbooks/ubuntu-02.yml</code>; <code>ansible/roles/manga/</code>; <code>containers/vikunja/config.json</code>; <code>containers/kavita/config.json</code>; <code>containers/homepage/config/bookmarks.yaml</code>; <code>ansible/roles/nfs_client/</code></p></article>
+          <article class="server-card"><header><h3><code>monitoring-01</code></h3><span class="ip">192.168.1.150</span></header><h4>Configured services</h4><p>Ansible playbook currently configures NFS client only. Pushgateway, Prometheus, and Grafana stack is proposed in docs only.</p><h4>Storage and users</h4><p>Four NFS mounts are configured by role. Terraform specifies Ubuntu account <code>ubuntu</code>; Ansible inventory also uses <code>ubuntu</code>.</p><p class="sources"><strong>Sources:</strong> <code>ansible/playbooks/monitoring-01.yml</code>; <code>ansible/roles/nfs_client/</code>; <code>terraform/proxmox/vms/terraform.tfvars</code>; <code>docs/implementation-grafana-monitoring.md</code></p></article>
+          <article class="server-card"><header><h3><code>db-pg-01</code></h3><span class="ip">192.168.1.151</span></header><h4>Configured services</h4><p>PostgreSQL 18 in Compose; daily <code>pg_dump</code> cron scheduled for 02:30, logs to <code>/home/ubuntu/pg_backup/pg-dump.log</code>. Audiobookshelf deployment metadata points to this host.</p><h4>Storage and users</h4><p>PostgreSQL dumps go to <code>/mnt/containers-data/backups/postgresql</code>; NFS client mounts four shares. PostgreSQL data uses named volume <code>postgresql_data</code>. Login account: <code>ubuntu</code>.</p><p class="sources"><strong>Sources:</strong> <code>ansible/playbooks/db-pg-01.yml</code>; <code>ansible/roles/postgresql18/</code>; <code>ansible/roles/pg_backup/</code>; <code>containers/audiobookshelf/config.json</code>; <code>ansible/roles/nfs_client/</code></p></article>
+          <article class="server-card"><header><h3><code>eiko</code> <span class="tag documentation">Homepage display data</span></h3><span class="ip">192.168.1.102 per Homepage static data</span></header><h4>Documented role</h4><p>Proxmox node named by Terraform for monitoring and database VMs; no Ansible host entry or OS-level role for this node.</p><h4>Notes</h4><p>Image downloads target this node; Homepage's physical-host IP is display data and is not stated in Terraform.</p><p class="sources"><strong>Sources:</strong> <code>terraform/proxmox/images/terraform.tfvars</code>; <code>terraform/proxmox/vms/terraform.tfvars</code>; <code>containers/homepage/static-data/servers.json</code></p></article>
+        </div>
+        <div class="callout"><h3>Repository task definitions</h3><p>The root <code>justfile</code> exposes local/remote Compose deployment, backup, preparation, and inventory-generation tasks. <code>.mise.toml</code> includes role tasks and Terraform init/plan/apply/destroy tasks. These task definitions describe available operations, not evidence that operations have been run. No secret values, credentials, tokens, or private key material are included in the source report.</p></div>
+      </section>
+      <footer><p>Prepared from the source inventory dated 2026-10-01. Facts retain the source's configured, documented, inferred, and unknown distinctions.</p><a href="#main">Back to top ↑</a></footer>
+    </main>
+  </div>
+</body>
+</html>
