@@ -20,7 +20,7 @@ copied there or moved to shared storage.
 
 ## Add a VM definition
 
-Copy `vm-definitions/app-01.json`, then set a free VM ID, hostname, node, image
+Copy `vm-definitions/vms/app-01.json`, then set a free VM ID, hostname, node, image
 identifier, resources, network address, and SSH public key path. Add other
 available disk images to `vm-definitions/images.json`, each with a unique
 identifier and Proxmox import volume. Do not put API tokens or private SSH keys
@@ -37,8 +37,8 @@ certificate is trusted by the machine running the tool.
 From the repository root:
 
 ```bash
-node scripts/proxmox-vm.mjs validate vm-definitions/app-01.json
-node scripts/proxmox-vm.mjs create vm-definitions/app-01.json
+node scripts/proxmox-vm.mjs validate vm-definitions/vms/app-01.json
+node scripts/proxmox-vm.mjs create vm-definitions/vms/app-01.json
 ```
 
 Validation checks the VM definition, SSH public key, node, target storage,
