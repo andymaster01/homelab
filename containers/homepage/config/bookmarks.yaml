@@ -17,6 +17,10 @@
         - icon: filebrowser-quantum
           href: http://192.168.1.130:8010/
 
+    - Forgejo:
+        - icon: forgejo
+          href: http://192.168.1.140:3000/
+
 - Productivity:
     - Vikunja:
         - icon: vikunja
