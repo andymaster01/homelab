@@ -266,6 +266,30 @@ async function createVm(api, vm, resolved) {
   console.log(`VM ${vm.name} (ID ${vm.vm_id}) started; cloud-init will configure it on first boot.`);
 }
 
+function printValidatedSpecs(vm, resolved) {
+  const network = vm.network.address === "dhcp"
+    ? "DHCP"
+    : `${vm.network.address} (gateway ${vm.network.gateway})`;
+  const dns = resolved.dns || "Proxmox node defaults";
+  const ramGiB = Number((vm.memory_mb / 1024).toFixed(1));
+
+  console.log(`\nVM definition valid: ${vm.name}`);
+  console.log(`  Proxmox node : ${vm.node}`);
+  console.log(`  VM ID        : ${vm.vm_id}`);
+  console.log("  Machine");
+  console.log(`    CPU        : ${vm.cpu_cores} cores (host)`);
+  console.log(`    Memory     : ${vm.memory_mb} MiB (${ramGiB} GiB)`);
+  console.log(`    Boot disk  : ${vm.disk_gb} GiB on ${resolved.targetStorage}`);
+  console.log(`    Image      : ${resolved.imageVolume}`);
+  console.log("  Network");
+  console.log(`    Bridge     : ${resolved.bridge}`);
+  console.log(`    Address    : ${network}`);
+  console.log(`    DNS        : ${dns}`);
+  console.log("  Cloud-init");
+  console.log(`    Username   : ${vm.cloud_init.username}`);
+  console.log(`    SSH key    : ${resolved.publicKeyPath}`);
+}
+
 async function main() {
   const [action, definitionPath, ...extraArgs] = process.argv.slice(2);
   if (!["validate", "create"].includes(action) || !definitionPath || extraArgs.length) {
@@ -280,11 +304,7 @@ async function main() {
     const resolved = await validateDefinition(defaults, vm);
     const api = new ProxmoxAPI(resolved.apiUrl, getApiToken(), resolved.verifyTls);
     await validateOnProxmox(api, vm, resolved);
-    console.log(
-      `Validated ${vm.name} (ID ${vm.vm_id}) on ${vm.node}: ${vm.cpu_cores} CPU, `
-      + `${vm.memory_mb} MiB RAM, ${vm.disk_gb} GiB disk, network ${vm.network.address}, `
-      + `SSH key ${resolved.publicKeyPath}`,
-    );
+    printValidatedSpecs(vm, resolved);
     if (action === "create") await createVm(api, vm, resolved);
     return 0;
   } catch (error) {

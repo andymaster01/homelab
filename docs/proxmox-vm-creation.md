@@ -39,10 +39,12 @@ node scripts/proxmox-vm.mjs create vm-definitions/app-01.json
 ```
 
 Validation checks the VM definition, SSH public key, node, target storage,
-import image, and VM ID against the live Proxmox API. `create` repeats those
-checks, creates the VM and imported disk in one API operation, waits for the
-import task, then starts the VM. Proxmox cloud-init uses the username, SSH key,
-and network settings from the definition on first boot.
+import image, and VM ID against the live Proxmox API, then prints the resolved
+machine, network, image, and cloud-init settings in a readable summary. `create`
+repeats those checks, prints the same summary, creates the VM and imported disk
+in one API operation, waits for the import task, then starts the VM. Proxmox
+cloud-init uses the username, SSH key, and network settings from the definition
+on first boot.
 
 The API token needs permission to audit the cluster and target node/storage,
 allocate the VM and target disk, configure the VM and cloud-init, and start the
