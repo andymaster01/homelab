@@ -1,0 +1,11 @@
+{
+  "images": {
+    "ubuntu-26.04-server-amd64": {
+      "distribution": "Ubuntu Server",
+      "release": "26.04",
+      "architecture": "amd64",
+      "format": "raw",
+      "volume": "local:import/ubuntu-26.04-server-cloudimg-amd64.img.raw"
+    }
+  }
+}

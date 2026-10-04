@@ -6,7 +6,8 @@ Each VM receives an independent boot disk and its own cloud-init settings.
 
 ## Current Proxmox defaults
 
-`vm-definitions/defaults.json` points to the image currently on `bahamut`:
+`vm-definitions/images.json` lists available images by identifier. The current
+entry is `ubuntu-26.04-server-amd64`, which points to the image on `bahamut`:
 
 ```text
 local:import/ubuntu-26.04-server-cloudimg-amd64.img.raw
@@ -19,9 +20,11 @@ copied there or moved to shared storage.
 
 ## Add a VM definition
 
-Copy `vm-definitions/app-01.json`, then set a free VM ID, hostname, node,
-resources, network address, and SSH public key path. Do not put API tokens or
-private SSH keys in a VM definition.
+Copy `vm-definitions/app-01.json`, then set a free VM ID, hostname, node, image
+identifier, resources, network address, and SSH public key path. Add other
+available disk images to `vm-definitions/images.json`, each with a unique
+identifier and Proxmox import volume. Do not put API tokens or private SSH keys
+in a VM definition.
 
 The tool reads the Proxmox API token from `TF_VAR_proxmox_api_token` in the
 environment. If it is not set, the tool reads that variable from `fnox.toml`

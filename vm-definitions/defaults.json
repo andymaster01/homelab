@@ -1,7 +1,6 @@
 {
   "api_url": "https://192.168.1.101:8006/api2/json",
   "verify_tls": false,
-  "image_volume": "local:import/ubuntu-26.04-server-cloudimg-amd64.img.raw",
   "target_storage": "local-lvm",
   "bridge": "vmbr0",
   "dns": ["1.1.1.1"]

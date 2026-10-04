@@ -2,6 +2,7 @@
   "name": "app-01",
   "vm_id": 210,
   "node": "bahamut",
+  "image": "ubuntu-26.04-server-amd64",
   "cpu_cores": 2,
   "memory_mb": 4096,
   "disk_gb": 32,

@@ -13,6 +13,7 @@ import { isIP } from "node:net";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const defaultsPath = path.join(repoRoot, "vm-definitions", "defaults.json");
+const imagesPath = path.join(repoRoot, "vm-definitions", "images.json");
 const tokenName = "TF_VAR_proxmox_api_token";
 const taskTimeoutMs = 900_000;
 
@@ -131,8 +132,8 @@ function validateAddress(address, gateway) {
   if (isIP(match[1]) !== isIP(gateway)) throw new ProxmoxError("network.gateway address family must match network.address");
 }
 
-async function validateDefinition(defaults, vm) {
-  const required = ["name", "vm_id", "node", "cpu_cores", "memory_mb", "disk_gb", "network", "cloud_init"];
+async function validateDefinition(defaults, imageRegistry, vm) {
+  const required = ["name", "vm_id", "node", "image", "cpu_cores", "memory_mb", "disk_gb", "network", "cloud_init"];
   const missing = required.filter((key) => !(key in vm));
   if (missing.length) throw new ProxmoxError(`VM definition is missing: ${missing.join(", ")}`);
   if (typeof vm.name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,62}$/.test(vm.name)) {
@@ -171,9 +172,18 @@ async function validateDefinition(defaults, vm) {
   if (typeof defaults.api_url !== "string" || !defaults.api_url.startsWith("https://")) {
     throw new ProxmoxError("defaults.api_url must be an HTTPS URL");
   }
-  if (typeof defaults.image_volume !== "string"
-      || !/^[A-Za-z0-9_.-]+:import\/[A-Za-z0-9_.+-]+$/.test(defaults.image_volume)) {
-    throw new ProxmoxError("defaults.image_volume must identify import content, such as local:import/image.raw");
+  if (typeof vm.image !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(vm.image)) {
+    throw new ProxmoxError("image must be a valid image identifier from vm-definitions/images.json");
+  }
+  if (!imageRegistry.images || typeof imageRegistry.images !== "object" || Array.isArray(imageRegistry.images)) {
+    throw new ProxmoxError("vm-definitions/images.json must contain an images object");
+  }
+  const image = imageRegistry.images[vm.image];
+  if (!image || typeof image !== "object" || Array.isArray(image)) {
+    throw new ProxmoxError(`Image identifier '${vm.image}' is not defined in vm-definitions/images.json`);
+  }
+  if (typeof image.volume !== "string" || !/^[A-Za-z0-9_.-]+:import\/[A-Za-z0-9_.+-]+$/.test(image.volume)) {
+    throw new ProxmoxError(`Image '${vm.image}' must have a volume in import content, such as local:import/image.raw`);
   }
   for (const name of ["target_storage", "bridge"]) {
     if (typeof defaults[name] !== "string" || !/^[A-Za-z0-9_.-]+$/.test(defaults[name])) {
@@ -190,7 +200,8 @@ async function validateDefinition(defaults, vm) {
   return {
     apiUrl: defaults.api_url,
     verifyTls: defaults.verify_tls ?? true,
-    imageVolume: defaults.image_volume,
+    imageId: vm.image,
+    imageVolume: image.volume,
     targetStorage: defaults.target_storage,
     bridge: defaults.bridge,
     dns: defaults.dns.join(","),
@@ -280,7 +291,8 @@ function printValidatedSpecs(vm, resolved) {
   console.log(`    CPU        : ${vm.cpu_cores} cores (host)`);
   console.log(`    Memory     : ${vm.memory_mb} MiB (${ramGiB} GiB)`);
   console.log(`    Boot disk  : ${vm.disk_gb} GiB on ${resolved.targetStorage}`);
-  console.log(`    Image      : ${resolved.imageVolume}`);
+  console.log(`    Image      : ${resolved.imageId}`);
+  console.log(`    Source     : ${resolved.imageVolume}`);
   console.log("  Network");
   console.log(`    Bridge     : ${resolved.bridge}`);
   console.log(`    Address    : ${network}`);
@@ -297,11 +309,12 @@ async function main() {
     return 2;
   }
   try {
-    const [defaults, vm] = await Promise.all([
+    const [defaults, imageRegistry, vm] = await Promise.all([
       readJson(defaultsPath),
+      readJson(imagesPath),
       readJson(path.resolve(definitionPath)),
     ]);
-    const resolved = await validateDefinition(defaults, vm);
+    const resolved = await validateDefinition(defaults, imageRegistry, vm);
     const api = new ProxmoxAPI(resolved.apiUrl, getApiToken(), resolved.verifyTls);
     await validateOnProxmox(api, vm, resolved);
     printValidatedSpecs(vm, resolved);
