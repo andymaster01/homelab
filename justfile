@@ -12,6 +12,9 @@ prepare:
     ./scripts/prepare.sh 192.168.1.130
     ./scripts/prepare.sh 192.168.1.140
 
+prepare-ubuntu-26:
+    ./scripts/prepare-ubuntu-26.sh 192.168.1.140
+
 backup container:
     ./scripts/backup.sh {{container}}
 
