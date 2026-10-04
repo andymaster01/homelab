@@ -14,6 +14,12 @@ prepare:
 backup container:
     ./scripts/backup.sh {{container}}
 
+vm-validate definition:
+    python3 scripts/proxmox-vm.py validate {{definition}}
+
+vm-create definition:
+    python3 scripts/proxmox-vm.py create {{definition}}
+
 create-inventory-source:
     @printf '\033[1;36mRepository inventory\033[0m\n\n'
     @codex exec --model gpt-6-luna -c 'model_reasoning_effort="medium"' "$(cat prompts/repository-inventory.md)"
