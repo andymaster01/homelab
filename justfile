@@ -10,6 +10,7 @@ scrap:
 prepare:
     ./scripts/prepare.sh 192.168.1.151
     ./scripts/prepare.sh 192.168.1.130
+    ./scripts/prepare.sh 192.168.1.140
 
 backup container:
     ./scripts/backup.sh {{container}}
