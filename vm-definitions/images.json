@@ -4,8 +4,8 @@
       "distribution": "Ubuntu Server",
       "release": "26.04",
       "architecture": "amd64",
-      "format": "raw",
-      "volume": "local:import/ubuntu-26.04-server-cloudimg-amd64.img.raw"
+      "format": "qcow2",
+      "volume": "local:import/ubuntu-26.04-server-cloudimg-amd64.qcow2"
     }
   }
 }

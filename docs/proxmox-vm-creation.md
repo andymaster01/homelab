@@ -10,7 +10,7 @@ Each VM receives an independent boot disk and its own cloud-init settings.
 entry is `ubuntu-26.04-server-amd64`, which points to the image on `bahamut`:
 
 ```text
-local:import/ubuntu-26.04-server-cloudimg-amd64.img.raw
+local:import/ubuntu-26.04-server-cloudimg-amd64.qcow2
 ```
 
 The image is on `local` storage, which is node-local. The current target disk
@@ -46,8 +46,9 @@ import image, and VM ID against the live Proxmox API, then prints the resolved
 machine, network, image, and cloud-init settings in a readable summary. `create`
 repeats those checks, prints the same summary, creates the VM and imported disk
 in one API operation, waits for the import task, then starts the VM. Proxmox
-cloud-init uses the username, SSH key, and network settings from the definition
-on first boot.
+resizes the imported boot disk to the requested size before starting. Cloud-init
+uses the username, SSH key, and network settings from the definition on first
+boot.
 
 The API token needs permission to audit the cluster and target node/storage,
 allocate the VM and target disk, configure the VM and cloud-init, and start the

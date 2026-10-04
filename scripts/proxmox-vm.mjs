@@ -61,7 +61,10 @@ class ProxmoxAPI {
       Authorization: this.authorization,
       Accept: "application/json",
     };
-    if (body !== undefined) headers["Content-Type"] = "application/x-www-form-urlencoded";
+    if (body !== undefined) {
+      headers["Content-Type"] = "application/x-www-form-urlencoded";
+      headers["Content-Length"] = Buffer.byteLength(body);
+    }
 
     return new Promise((resolve, reject) => {
       const request = https.request(url, {
@@ -78,7 +81,8 @@ class ProxmoxAPI {
           try {
             payload = JSON.parse(responseBody);
           } catch {
-            reject(new ProxmoxError(`Proxmox returned invalid JSON for ${apiPath}`));
+            const excerpt = responseBody.trim().slice(0, 500) || "empty response body";
+            reject(new ProxmoxError(`Proxmox returned invalid JSON for ${apiPath} (HTTP ${response.statusCode}): ${excerpt}`));
             return;
           }
           if ((response.statusCode ?? 500) < 200 || (response.statusCode ?? 500) >= 300) {
@@ -105,6 +109,10 @@ class ProxmoxAPI {
     while (Date.now() < deadline) {
       const status = await this.request("GET", taskPath);
       if (status.status === "stopped") {
+        if (status.exitstatus?.startsWith("WARNINGS:")) {
+          console.warn(`Proxmox task completed with ${status.exitstatus}`);
+          return;
+        }
         if (status.exitstatus !== "OK") {
           throw new ProxmoxError(`Proxmox task failed: ${status.exitstatus ?? "unknown status"}`);
         }
@@ -249,14 +257,15 @@ async function createVm(api, vm, resolved) {
     cpu: "host",
     memory: String(vm.memory_mb),
     ostype: "l26",
-    scsihw: "virtio-scsi-pci",
-    scsi0: `${resolved.targetStorage}:0,import-from=${resolved.imageVolume},discard=on,iothread=1,size=${vm.disk_gb}G`,
+    scsihw: "virtio-scsi-single",
+    scsi0: `${resolved.targetStorage}:0,import-from=${resolved.imageVolume},discard=on,iothread=1`,
     ide2: `${resolved.targetStorage}:cloudinit`,
     boot: "order=scsi0;net0",
     net0: `virtio,bridge=${resolved.bridge}`,
     agent: "enabled=1",
     ciuser: vm.cloud_init.username,
-    sshkeys: resolved.publicKey,
+    // Proxmox expects this field URL-encoded within the form parameter itself.
+    sshkeys: encodeURIComponent(resolved.publicKey),
     ipconfig0: ipconfig,
     start: "0",
     onboot: "1",
@@ -266,6 +275,14 @@ async function createVm(api, vm, resolved) {
   console.log(`Creating VM ${vm.name} (ID ${vm.vm_id}) on ${vm.node} from ${resolved.imageVolume}...`);
   const upid = await api.request("POST", `/nodes/${encodeURIComponent(vm.node)}/qemu`, config);
   await api.waitForTask(vm.node, upid);
+
+  console.log(`Resizing boot disk to ${vm.disk_gb} GiB...`);
+  const resizeTask = await api.request(
+    "PUT",
+    `/nodes/${encodeURIComponent(vm.node)}/qemu/${vm.vm_id}/resize`,
+    { disk: "scsi0", size: `${vm.disk_gb}G` },
+  );
+  await api.waitForTask(vm.node, resizeTask);
 
   console.log(`Starting VM ${vm.name}...`);
   const startTask = await api.request(
