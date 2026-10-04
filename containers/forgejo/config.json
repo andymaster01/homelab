@@ -1,0 +1,19 @@
+{
+  "remote": "192.168.1.140",
+  "remote_dir": "/home/ubuntu/compose/forgejo",
+  "port": 3000,
+  "data_directories": [
+    { "path": "forgejo", "uid": 1000, "gid": 1000 }
+  ],
+  "backup": {
+    "stopContainer": true,
+    "destination": "/mnt/containers-data/backups/forgejo",
+    "items": [
+      {
+        "path": "/var/lib/forgejo",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}
