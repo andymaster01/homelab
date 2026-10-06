@@ -2,7 +2,7 @@ name: tsuyomi
 
 services:
   tsuyomi:
-    image: ghcr.io/suwayomi/suwayomi-server:v2.2.2100
+    image: ghcr.io/suwayomi/suwayomi-server:v2.3.2243
     container_name: tsuyomi
     restart: unless-stopped
 
