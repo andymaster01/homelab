@@ -5,7 +5,7 @@
 - Running server: `v2.1.1867`
 - Database: H2, version 50
 - Current data directory: `/var/lib/suwayomi/suwayomi-files`
-- Downloads directory: `/mnt/containers-data/manga-downloads`
+- Downloads directory: `/mnt/media/manga`
 - Target: `v2.4.2366`, the latest release listed on October 6, 2026
 
 The Compose service is pinned to a versioned image tag. Keep using explicit tags instead of `stable` or `latest`.
@@ -43,7 +43,7 @@ The release notes do not state that intermediate versions are required. Staging 
 
 ## Rollback
 
-If a step fails, stop further upgrades and inspect the container logs. Since a release may migrate the database, rolling back the image alone may not work. Restore `/var/lib/suwayomi/suwayomi-files` from the pre-upgrade backup as well as pinning the image to the previous version. Leave `/mnt/containers-data/manga-downloads` in place.
+If a step fails, stop further upgrades and inspect the container logs. Since a release may migrate the database, rolling back the image alone may not work. Restore `/var/lib/suwayomi/suwayomi-files` from the pre-upgrade backup as well as pinning the image to the previous version. Leave `/mnt/media/manga` in place.
 
 ## Release references
 
