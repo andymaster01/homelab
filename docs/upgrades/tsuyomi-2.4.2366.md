@@ -21,7 +21,15 @@ The configured backup covers the full server data directory, including the H2 da
 
 ## Staged upgrade
 
-For each step, update `image` in `containers/tsuyomi/docker-compose.yml`, commit the version change, and run `just deploy-remote tsuyomi`. Check the startup logs before moving to the next version.
+For each step, update `image` in `containers/tsuyomi/docker-compose.yml`, commit the version change, and run `just deploy-remote tsuyomi`. Check the startup logs before moving to the next version:
+
+```bash
+ssh ubuntu@192.168.1.131
+cd /home/ubuntu/compose/tsuyomi
+docker compose logs --tail=200 tsuyomi
+```
+
+Look for the `Listening on http://0.0.0.0:4567/` startup message and check for database migration errors or other `ERROR` entries. To follow the logs while the server starts, use `docker compose logs -f tsuyomi`; press `Ctrl+C` to stop following without stopping the container.
 
 1. `ghcr.io/suwayomi/suwayomi-server:v2.2.2100`
 2. `ghcr.io/suwayomi/suwayomi-server:v2.3.2243`
