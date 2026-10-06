@@ -25,7 +25,9 @@ just setup-komodo
 It prompts for the new VM's IPv4 address and onboarding key, then connects over
 SSH as `ubuntu`, uses the VM hostname as its Komodo server name, and installs
 Periphery `2.3.3`. The SSH account must have non-interactive `sudo` access for
-the install.
+the install. If Periphery is already installed, this recipe refreshes the Core
+address, server name, and onboarding key in its existing config before
+restarting the service.
 
 To install manually instead, SSH to the new Ubuntu VM. Replace `new-vm-name`
 with the name to show in Komodo. Enter the onboarding key at the hidden prompt
@@ -71,7 +73,8 @@ address, server name, and Periphery version are correct.
 For a VM that already has Periphery installed and configured, run
 `just enable-komodo`. It prompts for the VM's IP, warns if the Periphery binary,
 configuration, or systemd service is missing, and enables and starts the service
-when needed.
+when needed. It checks local systemd state only; confirm that the server reports
+healthy in Komodo to verify the onboarding handshake succeeded.
 
 ## 4. Remove the temporary onboarding key
 

@@ -37,5 +37,6 @@ fi
 
 systemctl is-enabled --quiet periphery
 systemctl is-active --quiet periphery
-printf 'Periphery is configured, enabled, and running on %s.\n' "$(hostname -s)"
+printf 'Periphery is installed, enabled, and active on %s.\n' "$(hostname -s)"
+printf 'Confirm a healthy connection in Komodo; systemd status alone does not verify onboarding.\n'
 REMOTE_SCRIPT
