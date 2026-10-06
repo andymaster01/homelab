@@ -24,14 +24,3 @@ services:
     environment:
       - TZ=America/Toronto
     restart: unless-stopped
-  
-  komga:
-    image: gotson/komga
-    user: "1000:1000"
-    container_name: komga
-    volumes:
-      - ./komga-files:/config
-      - /mnt/containers-data/manga-downloads:/data
-    ports:
-      - "25600:25600"
-    restart: unless-stopped

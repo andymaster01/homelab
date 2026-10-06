@@ -33,15 +33,6 @@
     mode: "0755"
   when: state == "present"
 
-- name: Create komga data dir
-  ansible.builtin.file:
-    path: "{{ manga_dir }}/komga-files"
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    mode: "0755"
-  when: state == "present"
-
 - name: Copy docker-compose.yml
   ansible.builtin.copy:
     src: "{{ role_path }}/docker/docker-compose.yml"
