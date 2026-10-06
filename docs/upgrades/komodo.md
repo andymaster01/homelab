@@ -8,9 +8,20 @@ Install Komodo as the management UI for the three existing Docker VMs. Use the a
 | --- | --- | --- |
 | Komodo Core and MongoDB, plus Periphery | `ubuntu-01` | `192.168.1.130` |
 | Periphery | `ubuntu-02` | `192.168.1.131` |
-| Periphery | `db-pg-01` | `192.168.1.151` |
+| Periphery | `eiko-02-151` | `192.168.1.151` |
 
 This places Core on an existing Docker VM. If that VM is down, Komodo’s dashboard is unavailable until it returns, though the other Docker hosts continue running their containers.
+
+## Preflight results (2026-10-06)
+
+- Docker is responding on all three VMs: Engine `29.8.1` on `ubuntu-01`, and `29.8.2` on `ubuntu-02-131` and `eiko-02-151`.
+- `ubuntu-01` has 17 GB free on `/` and the shared `/mnt/containers-data` mount reports 1.3 TB free. It currently runs Homepage on port 80; no process is listening on Komodo’s default port 9120.
+- `ubuntu-02-131` has 6.5 GB free on `/`; `eiko-02-151` has 11 GB free. Both mount the same shared data filesystem.
+- `ubuntu-02-131` and `eiko-02-151` have routes to and can ping `192.168.1.130`. All three VMs run Ubuntu 24.04.5 LTS on x86_64 with kernel `6.8.0-142-generic`.
+- Proposed LAN UI and agent endpoint: `http://192.168.1.130:9120` / `ws://192.168.1.130:9120`. The port is free on the Core VM; check any host or network firewall rule after deployment.
+- Pin Core and Periphery to Komodo `2.3.3`, the latest stable release found during this preflight. Pin MongoDB to `8.0.32`; Komodo’s official example uses the unpinned `mongo` tag. The three pinned image manifests are available for this host’s registry access; verify MongoDB starts cleanly during deployment.
+
+Docker and route checks passed. Confirming TCP/UI access from the other VMs and validating the pinned MongoDB image remain deployment checks because Komodo is not running yet.
 
 ## Components and choices
 
@@ -40,7 +51,7 @@ Do not add Periphery as a Compose service to the application hosts; install it t
 
 1. Confirm Docker is healthy and there is adequate free space on `ubuntu-01` for Komodo and MongoDB persistent data.
 2. Confirm all three VMs can reach `ubuntu-01` over the private network and that the intended UI port is not already in use.
-3. Select and record compatible explicit Komodo v2 image versions and the MongoDB version supported by Komodo’s current Compose example.
+3. Use the Komodo `2.3.3` Core and Periphery versions and MongoDB `8.0.32` recorded above; validate the MongoDB image against Komodo at first startup.
 4. Decide the LAN-only URL/port for Core. Configure an existing trusted reverse proxy only if needed; do not expose MongoDB or Docker APIs.
 
 ### 2. Deploy Core and MongoDB
@@ -53,7 +64,7 @@ Do not add Periphery as a Compose service to the application hosts; install it t
 ### 3. Onboard the three Docker servers
 
 1. In Komodo, create a short-lived onboarding key for each host. Keep each key out of Git and remove it from transient notes after use.
-2. Install Periphery as a systemd service on `ubuntu-01`, `ubuntu-02`, and `db-pg-01`, passing the reachable Core address and the host’s intended Komodo server name.
+2. Install Periphery as a systemd service on `ubuntu-01`, `ubuntu-02-131` (display as `ubuntu-02`), and `eiko-02-151`, passing the reachable Core address and intended Komodo server name.
 3. Verify the service is enabled and running after reboot, and verify each server reports a healthy connection in Komodo.
 4. Confirm Core can view each host’s Docker containers, images, and container logs. Use Komodo’s UI to inspect image cleanup controls, but do not prune images during installation.
 
