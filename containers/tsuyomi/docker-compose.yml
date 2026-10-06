@@ -11,7 +11,7 @@ services:
 
     volumes:
       - type: bind
-        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/manga-downloads
+        source: ${MANGA_DOWNLOADS:?Set MANGA_DOWNLOADS in the environment file}
         target: /home/suwayomi/.local/share/Tachidesk/downloads
       - type: bind
         source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/tsuyomi-files
