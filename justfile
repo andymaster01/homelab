@@ -15,6 +15,9 @@ prepare:
 prepare-ubuntu-26:
     ./scripts/prepare-ubuntu-26.sh 192.168.1.140
 
+setup-komodo:
+    ./scripts/setup-komodo.sh
+
 backup container:
     ./scripts/backup.sh {{container}}
 

@@ -16,9 +16,20 @@ version is `2.3.3`; keep Periphery compatible with the Core version.
 
 ## 2. Install Periphery
 
-SSH to the new Ubuntu VM. Replace `new-vm-name` with the name to show in
-Komodo. Enter the onboarding key at the hidden prompt so it is not written into
-shell history:
+From the repository root, run the interactive recipe:
+
+```bash
+just setup-komodo
+```
+
+It prompts for the new VM's IPv4 address and onboarding key, then connects over
+SSH as `ubuntu`, uses the VM hostname as its Komodo server name, and installs
+Periphery `2.3.3`. The SSH account must have non-interactive `sudo` access for
+the install.
+
+To install manually instead, SSH to the new Ubuntu VM. Replace `new-vm-name`
+with the name to show in Komodo. Enter the onboarding key at the hidden prompt
+so it is not written into shell history:
 
 ```bash
 set -e
