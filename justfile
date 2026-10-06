@@ -9,6 +9,7 @@ scrap:
 
 prepare:
     ./scripts/prepare.sh 192.168.1.151
+    ./scripts/prepare.sh 192.168.1.131
     ./scripts/prepare.sh 192.168.1.130
 
 prepare-ubuntu-26:
