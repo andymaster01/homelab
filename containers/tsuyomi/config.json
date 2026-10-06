@@ -1,0 +1,20 @@
+{
+  "remote": "192.168.1.131",
+  "remote_dir": "/home/ubuntu/compose/tsuyomi",
+  "port": 4567,
+  "data_directories": [
+    { "path": "manga-downloads", "uid": 1000, "gid": 1000 },
+    { "path": "tsuyomi-files", "uid": 1000, "gid": 1000 }
+  ],
+  "backup": {
+    "stopContainer": true,
+    "destination": "/mnt/containers-data/backups/tsuyomi",
+    "items": [
+      {
+        "path": "/mnt/containers-data/tsuyomi-files",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}
