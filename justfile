@@ -18,6 +18,9 @@ prepare-ubuntu-26:
 setup-komodo:
     ./scripts/setup-komodo.sh
 
+enable-komodo:
+    ./scripts/enable-komodo.sh
+
 backup container:
     ./scripts/backup.sh {{container}}
 

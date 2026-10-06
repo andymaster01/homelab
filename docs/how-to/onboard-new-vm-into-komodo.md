@@ -68,6 +68,11 @@ sudo journalctl -u periphery -n 100 --no-pager
 Check that the VM can reach `192.168.1.130` on port `9120`, and that the Core
 address, server name, and Periphery version are correct.
 
+For a VM that already has Periphery installed and configured, run
+`just enable-komodo`. It prompts for the VM's IP, warns if the Periphery binary,
+configuration, or systemd service is missing, and enables and starts the service
+when needed.
+
 ## 4. Remove the temporary onboarding key
 
 After the server has connected, remove the onboarding key from Periphery's
