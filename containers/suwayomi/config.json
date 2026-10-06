@@ -1,0 +1,19 @@
+{
+  "remote": "192.168.1.131",
+  "remote_dir": "/home/ubuntu/compose/suwayomi",
+  "port": 4567,
+  "data_directories": [
+    { "path": "suwayomi-files", "uid": 1000, "gid": 1000 }
+  ],
+  "backup": {
+    "stopContainer": true,
+    "destination": "/mnt/containers-data/backups/suwayomi",
+    "items": [
+      {
+        "path": "/var/lib/suwayomi/suwayomi-files",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}

@@ -1,9 +1,9 @@
-name: tsuyomi
+name: suwayomi
 
 services:
-  tsuyomi:
+  suwayomi:
     image: ghcr.io/suwayomi/suwayomi-server:v2.4.2366
-    container_name: tsuyomi
+    container_name: suwayomi
     restart: unless-stopped
 
     ports:
@@ -14,7 +14,7 @@ services:
         source: ${MANGA_DOWNLOADS:?Set MANGA_DOWNLOADS in the environment file}
         target: /home/suwayomi/.local/share/Tachidesk/downloads
       - type: bind
-        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/tsuyomi-files
+        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/suwayomi-files
         target: /home/suwayomi/.local/share/Tachidesk
 
     environment:
@@ -29,7 +29,7 @@ services:
 
   flaresolverr:
     image: ghcr.io/thephaseless/byparr:3.0.4
-    container_name: tsuyomi-flaresolverr
+    container_name: suwayomi-flaresolverr
     restart: unless-stopped
     init: true
 
