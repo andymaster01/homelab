@@ -1,0 +1,14 @@
+{
+  "remote": "192.168.1.130",
+  "remote_dir": "/home/ubuntu/compose/komodo",
+  "port": 9120,
+  "secret_environment_variables": [
+    "KOMODO_DATABASE_PASSWORD",
+    "KOMODO_INIT_ADMIN_PASSWORD",
+    "KOMODO_WEBHOOK_SECRET",
+    "KOMODO_JWT_SECRET"
+  ],
+  "data_directories": [
+    { "path": "backups/komodo", "uid": 1000, "gid": 1000 }
+  ]
+}
