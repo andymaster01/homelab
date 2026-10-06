@@ -29,7 +29,7 @@ services:
 
   flaresolverr:
     image: ghcr.io/thephaseless/byparr:3.0.4
-    container_name: flaresolverr
+    container_name: tsuyomi-flaresolverr
     restart: unless-stopped
     init: true
 
