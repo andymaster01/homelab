@@ -13,6 +13,8 @@ services:
       - type: bind
         source: ${MANGA_DOWNLOADS}/auto downloads
         target: /home/suwayomi/.local/share/Tachidesk/downloads
+        bind:
+          create_host_path: false
       - type: bind
         source: ${CONTAINERS_DATA}/suwayomi-files
         target: /home/suwayomi/.local/share/Tachidesk
@@ -51,9 +53,13 @@ services:
       - type: bind
         source: ${MANGA_DOWNLOADS}/auto downloads
         target: /data/auto downloads
+        bind:
+          create_host_path: false
       - type: bind
         source: ${MANGA_DOWNLOADS}/manual downloads
         target: /data/manual downloads
+        bind:
+          create_host_path: false
 
     user: "1000:1000"
 
