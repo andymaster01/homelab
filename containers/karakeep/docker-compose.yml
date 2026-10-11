@@ -14,10 +14,10 @@ services:
 
     environment:
       DATA_DIR: /data
-      NEXTAUTH_URL: ${KARAKEEP_PUBLIC_URL:?Set KARAKEEP_PUBLIC_URL in the environment file}
-      NEXTAUTH_SECRET: ${KARAKEEP_NEXTAUTH_SECRET:?Load KARAKEEP_NEXTAUTH_SECRET from fnox}
+      NEXTAUTH_URL: ${KARAKEEP_PUBLIC_URL}
+      NEXTAUTH_SECRET: ${KARAKEEP_NEXTAUTH_SECRET}
       MEILI_ADDR: http://meilisearch:7700
-      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY:?Load KARAKEEP_MEILI_MASTER_KEY from fnox}
+      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY}
       BROWSER_WEB_URL: http://chrome:9222
       CRAWLER_VIDEO_DOWNLOAD: "true"
       CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE: ${CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE:-50}
@@ -42,7 +42,7 @@ services:
     image: getmeili/meilisearch:v1.41.0
     restart: unless-stopped
     environment:
-      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY:?Load KARAKEEP_MEILI_MASTER_KEY from fnox}
+      MEILI_MASTER_KEY: ${KARAKEEP_MEILI_MASTER_KEY}
       MEILI_NO_ANALYTICS: "true"
     volumes:
       - meilisearch:/meili_data

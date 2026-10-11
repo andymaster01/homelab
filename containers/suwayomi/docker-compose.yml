@@ -11,10 +11,10 @@ services:
 
     volumes:
       - type: bind
-        source: ${MANGA_DOWNLOADS:?Set MANGA_DOWNLOADS in the environment file}
+        source: ${MANGA_DOWNLOADS}
         target: /home/suwayomi/.local/share/Tachidesk/downloads
       - type: bind
-        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/suwayomi-files
+        source: ${CONTAINERS_DATA}/suwayomi-files
         target: /home/suwayomi/.local/share/Tachidesk
 
     environment:
@@ -46,10 +46,10 @@ services:
 
     volumes:
       - type: bind
-        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/komga-files
+        source: ${CONTAINERS_DATA}/komga-files
         target: /config
       - type: bind
-        source: ${MANGA_DOWNLOADS:?Set MANGA_DOWNLOADS in the environment file}
+        source: ${MANGA_DOWNLOADS}
         target: /data
 
     user: "1000:1000"

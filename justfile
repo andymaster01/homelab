@@ -4,6 +4,14 @@ deploy-local container:
 deploy-remote container:
     ./scripts/remote-deployment.sh {{container}}
 
+pre-commit: check-compose-vars
+
+check-compose-vars:
+    @if rg -n '\$\{[A-Za-z_][A-Za-z0-9_]*:\?' containers -g '*.yml' -g '*.yaml'; then \
+        echo 'Use ${VAR} instead of ${VAR:?message} in Compose files' >&2; \
+        exit 1; \
+    fi
+
 scrap:
     ./scripts/scrap.sh
 

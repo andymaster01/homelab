@@ -11,7 +11,7 @@ services:
       - "${SSH_PORT:-2222}:22"
 
     volumes:
-      - ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/forgejo:/data
+      - ${CONTAINERS_DATA}/forgejo:/data
       - /etc/localtime:/etc/localtime:ro
 
     environment:

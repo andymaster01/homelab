@@ -10,10 +10,10 @@ services:
       - "${PORT:-3456}:3456"
 
     volumes:
-      - ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/db:/db
-      - ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/files:/app/vikunja/files
+      - ${CONTAINERS_DATA}/db:/db
+      - ${CONTAINERS_DATA}/files:/app/vikunja/files
 
     environment:
-      VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL:?Set VIKUNJA_SERVICE_PUBLICURL in the environment file}
-      VIKUNJA_SERVICE_SECRET: ${VIKUNJA_SERVICE_SECRET:?Set VIKUNJA_SERVICE_SECRET in the environment file}
+      VIKUNJA_SERVICE_PUBLICURL: ${VIKUNJA_SERVICE_PUBLICURL}
+      VIKUNJA_SERVICE_SECRET: ${VIKUNJA_SERVICE_SECRET}
       TZ: ${TZ:-America/Toronto}
