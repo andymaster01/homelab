@@ -35,6 +35,10 @@
         - icon: suwayomi
           href: http://192.168.1.131:4567/
 
+    - Komga:
+        - icon: komga
+          href: http://192.168.1.131:25600/
+
     - AudiobookShelf:
         - icon: audiobookshelf
           href: http://192.168.1.151:13378/

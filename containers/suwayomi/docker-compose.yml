@@ -35,3 +35,24 @@ services:
 
     environment:
       TZ: ${TZ:-America/Toronto}
+
+  komga:
+    image: gotson/komga:1.28.1
+    container_name: komga
+    restart: unless-stopped
+
+    ports:
+      - "25600:25600"
+
+    volumes:
+      - type: bind
+        source: ${CONTAINERS_DATA:?Set CONTAINERS_DATA in the environment file}/komga-files
+        target: /config
+      - type: bind
+        source: ${MANGA_DOWNLOADS:?Set MANGA_DOWNLOADS in the environment file}
+        target: /data
+
+    user: "1000:1000"
+
+    environment:
+      TZ: ${TZ:-America/Toronto}

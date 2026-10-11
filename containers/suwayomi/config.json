@@ -3,7 +3,8 @@
   "remote_dir": "/home/ubuntu/compose/suwayomi",
   "port": 4567,
   "data_directories": [
-    { "path": "suwayomi-files", "uid": 1000, "gid": 1000 }
+    { "path": "suwayomi-files", "uid": 1000, "gid": 1000 },
+    { "path": "komga-files", "uid": 1000, "gid": 1000 }
   ],
   "backup": {
     "stopContainer": true,
