@@ -21,6 +21,10 @@
         - icon: forgejo
           href: http://192.168.1.140:3000/
 
+    - Komodo:
+        - icon: komodo
+          href: http://192.168.1.130:9120/
+
 - Productivity:
     - Vikunja:
         - icon: vikunja
