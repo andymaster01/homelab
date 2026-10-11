@@ -12,12 +12,6 @@ layout:
   Productivity:
     style: columns
 
-  Home:
-    style: columns
-
-  Infrastructure:
-    style: columns
-
   Developer:
     style: row
     columns: 2
@@ -25,3 +19,9 @@ layout:
   Media:
     style: row
     columns: 2
+
+  Home:
+    style: columns
+
+  Infrastructure:
+    style: columns
