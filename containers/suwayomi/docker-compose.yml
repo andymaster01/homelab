@@ -11,7 +11,7 @@ services:
 
     volumes:
       - type: bind
-        source: ${MANGA_DOWNLOADS}
+        source: ${MANGA_DOWNLOADS}/auto downloads
         target: /home/suwayomi/.local/share/Tachidesk/downloads
       - type: bind
         source: ${CONTAINERS_DATA}/suwayomi-files
@@ -49,8 +49,11 @@ services:
         source: ${CONTAINERS_DATA}/komga-files
         target: /config
       - type: bind
-        source: ${MANGA_DOWNLOADS}
-        target: /data
+        source: ${MANGA_DOWNLOADS}/auto downloads
+        target: /data/auto downloads
+      - type: bind
+        source: ${MANGA_DOWNLOADS}/manual downloads
+        target: /data/manual downloads
 
     user: "1000:1000"
 
