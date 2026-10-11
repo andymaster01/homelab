@@ -11,7 +11,7 @@ services:
 
     volumes:
       - type: bind
-        source: ${MANGA_DOWNLOADS}/auto downloads
+        source: ${MANGA_DOWNLOADS}/downloads-auto
         target: /home/suwayomi/.local/share/Tachidesk/downloads
         bind:
           create_host_path: false
@@ -51,13 +51,13 @@ services:
         source: ${CONTAINERS_DATA}/komga-files
         target: /config
       - type: bind
-        source: ${MANGA_DOWNLOADS}/auto downloads
-        target: /data/auto downloads
+        source: ${MANGA_DOWNLOADS}/downloads-auto
+        target: /data/downloads-auto
         bind:
           create_host_path: false
       - type: bind
-        source: ${MANGA_DOWNLOADS}/manual downloads
-        target: /data/manual downloads
+        source: ${MANGA_DOWNLOADS}/downloads-manual
+        target: /data/downloads-manual
         bind:
           create_host_path: false
 
