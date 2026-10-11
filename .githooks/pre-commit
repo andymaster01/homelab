@@ -4,6 +4,7 @@ set -eu
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
+# Reject Compose variables that turn unset or empty values into hard errors.
 if rg -n '\$\{[A-Za-z_][A-Za-z0-9_]*:\?' containers -g '*.yml' -g '*.yaml'; then
     echo 'Use ${VAR} instead of ${VAR:?message} in Compose files' >&2
     exit 1
