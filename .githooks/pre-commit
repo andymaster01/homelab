@@ -3,4 +3,8 @@ set -eu
 
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
-just pre-commit
+
+if rg -n '\$\{[A-Za-z_][A-Za-z0-9_]*:\?' containers -g '*.yml' -g '*.yaml'; then
+    echo 'Use ${VAR} instead of ${VAR:?message} in Compose files' >&2
+    exit 1
+fi
