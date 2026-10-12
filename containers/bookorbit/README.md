@@ -24,4 +24,4 @@ Back up the persistent files with:
 just backup bookorbit
 ```
 
-To update BookOrbit, change `APP_IMAGE` in `.env.remote` to the desired release and deploy again.
+To update BookOrbit, change the pinned image tag in `docker-compose.yml` to the desired release and deploy again.
