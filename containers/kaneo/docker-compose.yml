@@ -1,0 +1,52 @@
+name: kaneo
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kaneo-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: kaneo
+      POSTGRES_USER: kaneo
+      POSTGRES_PASSWORD: ${KANEO_POSTGRES_PASSWORD?required}
+
+    volumes:
+      - type: bind
+        source: ${POSTGRES_DATA_PATH}
+        target: /var/lib/postgresql/data
+        bind:
+          create_host_path: false
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaneo -d kaneo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kaneo:
+    image: ghcr.io/usekaneo/kaneo:2.39.1
+    container_name: kaneo
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-5173}:5173"
+
+    environment:
+      KANEO_CLIENT_URL: ${KANEO_CLIENT_URL?required}
+      AUTH_SECRET: ${KANEO_AUTH_SECRET?required}
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: kaneo
+      POSTGRES_USER: kaneo
+      POSTGRES_PASSWORD: ${KANEO_POSTGRES_PASSWORD?required}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5173/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3

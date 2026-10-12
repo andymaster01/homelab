@@ -1,0 +1,21 @@
+{
+  "remote": "192.168.1.140",
+  "remote_dir": "/home/ubuntu/compose/kaneo",
+  "port": 5173,
+  "secret_environment_variables": [
+    "KANEO_POSTGRES_PASSWORD",
+    "KANEO_AUTH_SECRET"
+  ],
+  "backup": {
+    "stopContainer": true,
+    "stopContainers": ["kaneo", "kaneo-postgres"],
+    "destination": "/mnt/containers-data/backups/kaneo",
+    "items": [
+      {
+        "path": "/var/lib/kaneo/postgres",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}
