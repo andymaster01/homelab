@@ -35,6 +35,10 @@
           href: http://192.168.1.131:3000/
 
 - Media:
+    - BookOrbit:
+        - icon: mdi-book-open-page-variant
+          href: http://192.168.1.130:3000/
+
     - Suwayomi:
         - icon: suwayomi
           href: http://192.168.1.131:4567/
