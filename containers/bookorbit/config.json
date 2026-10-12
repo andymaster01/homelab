@@ -1,0 +1,26 @@
+{
+  "remote": "192.168.1.130",
+  "remote_dir": "/home/ubuntu/compose/bookorbit",
+  "port": 3000,
+  "secret_environment_variables": [
+    "POSTGRES_PASSWORD",
+    "JWT_SECRET",
+    "SETUP_BOOTSTRAP_TOKEN"
+  ],
+  "backup": {
+    "stopContainer": true,
+    "stopContainers": ["bookorbit-app", "bookorbit-db"],
+    "destination": "/mnt/containers-data/backups/bookorbit",
+    "items": [
+      {
+        "path": "/var/lib/bookorbit/app",
+        "type": "folder"
+      },
+      {
+        "path": "/var/lib/bookorbit/postgres",
+        "type": "folder"
+      }
+    ],
+    "retention": 5
+  }
+}
