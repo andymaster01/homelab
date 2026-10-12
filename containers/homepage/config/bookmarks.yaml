@@ -26,6 +26,10 @@
           href: http://192.168.1.130:9120/
 
 - Productivity:
+    - Kaneo:
+        - icon: mdi-clipboard-check-outline
+          href: http://192.168.1.140:5173/
+
     - Vikunja:
         - icon: vikunja
           href: http://192.168.1.131:3456/
