@@ -1,0 +1,22 @@
+name: convertx
+
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:v0.19.0
+    container_name: convertx
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-3000}:3000"
+
+    volumes:
+      - data:/app/data
+
+    environment:
+      PUID: 1000
+      PGID: 1000
+      JWT_SECRET: ${CONVERTX_JWT_SECRET}
+      TZ: ${TZ:-America/Toronto}
+
+volumes:
+  data:
