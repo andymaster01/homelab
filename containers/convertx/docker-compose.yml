@@ -16,6 +16,7 @@ services:
       PUID: 1000
       PGID: 1000
       JWT_SECRET: ${CONVERTX_JWT_SECRET}
+      HTTP_ALLOWED: "true"
       TZ: ${TZ:-America/Toronto}
 
 volumes:
