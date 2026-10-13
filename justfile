@@ -26,6 +26,9 @@ prepare-ubuntu-26:
 setup-komodo:
     ./scripts/setup-komodo.sh
 
+upgrade-xcape-plugins:
+    codex plugin marketplace upgrade xcape-plugins
+
 enable-komodo:
     ./scripts/enable-komodo.sh
 
