@@ -41,7 +41,7 @@ PCI address form (for example, `0000:01:00`) to pass all functions of a device,
 or list each function explicitly as separate entries. Set `pcie` to `true` for
 PCIe passthrough. PCIe devices require Q35.
 
-The `audiobook-01` definition uses these options for the GTX 1060 (`0000:01:00.0`)
+The `gpuloads-01` definition uses these options for the GTX 1060 (`0000:01:00.0`)
 and its audio function (`0000:01:00.1`) on `bahamut`. It starts with DHCP;
 reserve the guest address in DHCP before connecting it to long-lived deployment
 configuration.

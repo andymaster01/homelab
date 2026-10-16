@@ -1,5 +1,5 @@
 {
-  "name": "audiobook-01",
+  "name": "gpuloads-01",
   "vm_id": 211,
   "node": "bahamut",
   "image": "ubuntu-26.04-server-amd64",
