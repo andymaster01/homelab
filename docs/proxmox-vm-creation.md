@@ -32,6 +32,20 @@ using `fnox get`. TLS verification is disabled in the sample defaults to match
 the existing Proxmox configuration; set `verify_tls` to `true` when the API
 certificate is trusted by the machine running the tool.
 
+## Optional firmware and PCI passthrough settings
+
+VM definitions can set `machine` to `q35` and `bios` to `ovmf`. OVMF definitions
+receive a 4 MiB EFI disk on the target storage, without pre-enrolled Secure Boot
+keys. A `pci_devices` array configures Proxmox `hostpci` entries; use the short
+PCI address form (for example, `0000:01:00`) to pass all functions of a device,
+or list each function explicitly as separate entries. Set `pcie` to `true` for
+PCIe passthrough. PCIe devices require Q35.
+
+The `audiobook-01` definition uses these options for the GTX 1060 (`0000:01:00.0`)
+and its audio function (`0000:01:00.1`) on `bahamut`. It starts with DHCP;
+reserve the guest address in DHCP before connecting it to long-lived deployment
+configuration.
+
 ## Validate and create
 
 From the repository root:

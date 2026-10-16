@@ -1,0 +1,28 @@
+{
+  "name": "audiobook-01",
+  "vm_id": 211,
+  "node": "bahamut",
+  "image": "ubuntu-26.04-server-amd64",
+  "cpu_cores": 4,
+  "memory_mb": 16384,
+  "disk_gb": 40,
+  "machine": "q35",
+  "bios": "ovmf",
+  "pci_devices": [
+    {
+      "device": "0000:01:00.0",
+      "pcie": true
+    },
+    {
+      "device": "0000:01:00.1",
+      "pcie": true
+    }
+  ],
+  "network": {
+    "address": "dhcp"
+  },
+  "cloud_init": {
+    "username": "ubuntu",
+    "ssh_public_key_file": "~/.ssh/id_ed25519.pub"
+  }
+}

@@ -166,6 +166,36 @@ async function validateDefinition(defaults, imageRegistry, vm) {
   if (typeof vm.cloud_init.ssh_public_key_file !== "string" || !vm.cloud_init.ssh_public_key_file) {
     throw new ProxmoxError("cloud_init.ssh_public_key_file is required");
   }
+  if (vm.machine !== undefined && !["q35", "pc", "i440fx"].includes(vm.machine)) {
+    throw new ProxmoxError("machine must be q35, pc, or i440fx");
+  }
+  if (vm.bios !== undefined && !["seabios", "ovmf"].includes(vm.bios)) {
+    throw new ProxmoxError("bios must be seabios or ovmf");
+  }
+  if (vm.bios === "ovmf" && vm.machine !== "q35") {
+    throw new ProxmoxError("OVMF GPU passthrough requires machine: q35");
+  }
+  if (vm.pci_devices !== undefined) {
+    if (!Array.isArray(vm.pci_devices) || vm.pci_devices.length > 16) {
+      throw new ProxmoxError("pci_devices must be an array with at most 16 devices");
+    }
+    for (const [index, device] of vm.pci_devices.entries()) {
+      if (!device || typeof device !== "object" || Array.isArray(device)
+          || typeof device.device !== "string"
+          || !/^(?:[0-9a-fA-F]{4}:)?[0-9a-fA-F]{2}:[0-9a-fA-F]{2}(?:\.[0-7])?$/.test(device.device)) {
+        throw new ProxmoxError(`pci_devices[${index}].device must be a PCI address such as 0000:01:00 or 0000:01:00.0`);
+      }
+      if (device.pcie !== undefined && typeof device.pcie !== "boolean") {
+        throw new ProxmoxError(`pci_devices[${index}].pcie must be true or false`);
+      }
+      if (device.x_vga !== undefined && typeof device.x_vga !== "boolean") {
+        throw new ProxmoxError(`pci_devices[${index}].x_vga must be true or false`);
+      }
+      if (device.pcie && vm.machine !== "q35") {
+        throw new ProxmoxError(`pci_devices[${index}] requests PCIe, which requires machine: q35`);
+      }
+    }
+  }
   const keyFile = path.resolve(vm.cloud_init.ssh_public_key_file.replace(/^~(?=$|\/)/, os.homedir()));
   try {
     await access(keyFile, constants.R_OK);
@@ -270,6 +300,17 @@ async function createVm(api, vm, resolved) {
     start: "0",
     onboot: "1",
   };
+  if (vm.machine) config.machine = vm.machine;
+  if (vm.bios) config.bios = vm.bios;
+  if (vm.bios === "ovmf") {
+    config.efidisk0 = `${resolved.targetStorage}:0,efitype=4m,pre-enrolled-keys=0`;
+  }
+  for (const [index, device] of (vm.pci_devices ?? []).entries()) {
+    const options = [];
+    if (device.pcie !== undefined) options.push(`pcie=${Number(device.pcie)}`);
+    if (device.x_vga !== undefined) options.push(`x-vga=${Number(device.x_vga)}`);
+    config[`hostpci${index}`] = [device.device, ...options].join(",");
+  }
   if (resolved.dns) config.nameserver = resolved.dns;
 
   console.log(`Creating VM ${vm.name} (ID ${vm.vm_id}) on ${vm.node} from ${resolved.imageVolume}...`);
@@ -308,8 +349,13 @@ function printValidatedSpecs(vm, resolved) {
   console.log(`    CPU        : ${vm.cpu_cores} cores (host)`);
   console.log(`    Memory     : ${vm.memory_mb} MiB (${ramGiB} GiB)`);
   console.log(`    Boot disk  : ${vm.disk_gb} GiB on ${resolved.targetStorage}`);
+  if (vm.machine) console.log(`    Machine    : ${vm.machine}`);
+  if (vm.bios) console.log(`    Firmware   : ${vm.bios === "ovmf" ? "OVMF (UEFI)" : "SeaBIOS"}`);
   console.log(`    Image      : ${resolved.imageId}`);
   console.log(`    Source     : ${resolved.imageVolume}`);
+  for (const [index, device] of (vm.pci_devices ?? []).entries()) {
+    console.log(`    PCI device : ${device.device}${device.pcie ? " (PCIe)" : ""} as hostpci${index}`);
+  }
   console.log("  Network");
   console.log(`    Bridge     : ${resolved.bridge}`);
   console.log(`    Address    : ${network}`);
