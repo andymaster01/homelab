@@ -20,31 +20,37 @@ The entire process should run unattended. I want to drop an ebook into a directo
 
 ### Proxmox host
 
-- Proxmox VE hypervisor.
+- Proxmox VE 9.1.1 node `bahamut` (Lenovo ThinkStation P510, Intel Xeon E5-1650 v4).
 - EVGA NVIDIA GeForce GTX 1060 (GP106, device ID `10de:1c03`) with 6 GB VRAM, installed in Proxmox node `bahamut` at PCI address `0000:01:00.0`.
-- The GPU's HDMI audio function is at `0000:01:00.1` (device ID `10de:10f1`). Both functions are currently bound to host drivers (`nouveau` and `snd_hda_intel`).
-- VT-d/IOMMU is not active in the current host boot: no DMAR table or GPU IOMMU group is exposed, and the kernel log has no VT-d initialization message. The firmware VT-d setting still needs to be checked directly.
+- The GPU's HDMI audio function is at `0000:01:00.1` (device ID `10de:10f1`). Both functions are assigned to `gpuloads-01` and bound to `vfio-pci` on the host.
+- Intel VT-d is enabled in firmware. IOMMU is active on Proxmox; the GPU and its audio function share IOMMU group 42.
 - Applications run in Docker containers inside Linux virtual machines.
 - Docker is not running directly on the Proxmox host.
 - Komodo is available for Docker deployment and monitoring.
 - Audiobookshelf is already deployed and operational.
 
-### Proposed deployment
+### GPU VM: `gpuloads-01`
 
-Use a Linux VM (Ubuntu or Debian) dedicated to audiobook conversion, or reuse an existing Docker VM if appropriate.
+The dedicated VM has been created on `bahamut` (Proxmox VM ID 211) and is running Ubuntu 26.04.1 LTS. PCIe passthrough of both GPU functions is configured.
 
-Suggested initial resources:
-
-| Resource | Allocation |
+| Resource | Current allocation |
 |---|---|
-| CPU | 4–6 vCPU |
-| RAM | 12–16 GB |
-| GPU | EVGA NVIDIA GTX 1060, PCIe passthrough |
-| GPU VRAM | 6 GB |
-| Storage | 40 GB system disk, plus persistent model and audiobook volumes |
-| Runtime | Docker Engine + Docker Compose |
+| CPU | 4 vCPU |
+| RAM | 16 GiB |
+| GPU | EVGA NVIDIA GTX 1060 6 GB (`01:00.0`) |
+| GPU audio | NVIDIA GP106 audio (`01:00.1`) |
+| System disk | 40 GiB on `local-lvm` |
+| Guest IP | `192.168.1.32` (DHCP) |
+| Container engine | Docker Engine 29.1.3 (`docker.io` Ubuntu package) |
+| GPU container runtime | NVIDIA Container Toolkit 1.20.1 |
 
-The GTX 1060 must be passed through from Proxmox to the VM, then exposed to Docker containers via NVIDIA Container Toolkit.
+The guest NVIDIA driver is 580.178.04. Driver 595 was tested first, but its kernel module reported that the GTX 1060 is supported through the 580.xx legacy branch and ignored the card; it was replaced with 580.
+
+GPU container access is verified with `nvidia/cuda:13.0.1-base-ubuntu24.04` running `nvidia-smi`, which reported the GTX 1060 and 6144 MiB VRAM. The Proxmox guest agent is active and reports the VM network interfaces.
+
+The VM currently has about 33 GiB free on its 38 GiB root filesystem. Plan persistent model, incoming ebook, and completed audiobook storage before choosing a production converter image; model downloads can exceed the available system disk.
+
+The GTX 1060 is passed through from Proxmox to the VM and exposed to Docker containers through NVIDIA Container Toolkit.
 
 Only one VM will own the GPU through standard PCIe passthrough, but multiple Docker containers within that VM can share it.
 
