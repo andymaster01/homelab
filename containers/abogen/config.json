@@ -1,0 +1,16 @@
+{
+  "remote": "192.168.1.32",
+  "remote_dir": "/home/ubuntu/compose/abogen",
+  "port": 8808,
+  "build_locally": true,
+  "data_directories": [
+    { "path": "incoming", "uid": 1000, "gid": 1000 },
+    { "path": "models", "uid": 1000, "gid": 1000 },
+    { "path": "output", "uid": 1000, "gid": 1000 },
+    { "path": "work", "uid": 1000, "gid": 1000 },
+    { "path": "config", "uid": 1000, "gid": 1000 }
+  ],
+  "items": [
+    { "path": "build", "type": "folder" }
+  ]
+}

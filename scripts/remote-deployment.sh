@@ -51,6 +51,11 @@ if [[ "$remote_container_dir" != /* || "$remote_container_dir" == *..* || "$remo
 fi
 
 port="$(jq -er '.port | numbers | select(. >= 1 and . <= 65535 and floor == .)' "$config_file")"
+if ! jq -e '(.build_locally // false) | type == "boolean"' "$config_file" >/dev/null; then
+  echo "build_locally must be a boolean in $config_file" >&2
+  exit 1
+fi
+build_locally="$(jq -r '.build_locally // false' "$config_file")"
 item_paths=()
 while IFS= read -r item_path; do
   item_paths+=("$item_path")
@@ -223,12 +228,21 @@ done
 
 echo "Starting $container_name remotely..."
 if (( ${#secret_environment_variables[@]} > 0 )); then
-  for compose_action in "pull" "up -d"; do
+  if [[ "$build_locally" == true ]]; then
     printf '%s\n' "${secret_values[@]}" | ssh "$ssh_target" \
-      "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
-  done
+      "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
+  else
+    for compose_action in "pull" "up -d"; do
+      printf '%s\n' "${secret_values[@]}" | ssh "$ssh_target" \
+        "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
+    done
+  fi
 else
-  ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
+  if [[ "$build_locally" == true ]]; then
+    ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
+  else
+    ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
+  fi
 fi
 
 printf '\033[0;32mDone!\033[0m\n'
