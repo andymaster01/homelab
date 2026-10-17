@@ -15,6 +15,11 @@
             name: remote
             label: container_names
 
+- Media:
+    - Abogen:
+        icon: mdi-microphone
+        href: http://192.168.1.32:8808
+
 - Infrastructure:
     - Physical hosts:
         icon: mdi-server
