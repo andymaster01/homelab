@@ -31,7 +31,6 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir \
         torch==2.12.0+cu126 \
         torchvision==0.27.0+cu126 \
-        torchaudio==2.12.0+cu126 \
         --index-url "$TORCH_INDEX_URL" \
     && pip install --no-cache-dir . \
         https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
