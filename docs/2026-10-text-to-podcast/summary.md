@@ -54,9 +54,17 @@ The GTX 1060 is passed through from Proxmox to the VM and exposed to Docker cont
 
 Only one VM will own the GPU through standard PCIe passthrough, but multiple Docker containers within that VM can share it.
 
+### Initial Abogen deployment
+
+- Abogen Web UI v1.3.1 is deployed at `http://192.168.1.32:8808` as Docker container `abogen`.
+- The image is `abogen:1.3.1-py310-cu126-torch2.12.0`; it is built from upstream commit `d30415ffe7f7439ba04f78c0617c7a1fa41f9a12` and CUDA base image digest `sha256:5f0d2d827f6436b3cb7468fd8acbdc8c1d41261614e579ae49afe6141da51133`. PyTorch 2.12.0+cu126 and torchvision 0.27.0+cu126 are individually pinned. `torchaudio` is omitted because no 2.12 CUDA 12.6 wheel is published and Abogen's Kokoro path does not require it.
+- Docker Compose v2.40.3 is installed. Docker's `data-root` and containerd's image/snapshot store are both configured under `/srv/audiobook-factory`, keeping the multi-gigabyte image layers off the boot disk.
+- A text-to-MP3 smoke conversion completed using Kokoro voice `af_sarah` and the GTX 1060. The generated sample is 11.88 seconds / 90,508 bytes at `/srv/audiobook-factory/output/20261017-005305_GPU_Smoke_Test_English/GPU_Smoke_Test_English.mp3`. During the run, GPU memory use rose from about 5 MiB idle to about 737 MiB.
+- Abogen is reachable from the LAN. No application authentication or Audiobookshelf credentials have been configured yet. The UI uploads and queues jobs; it does not automatically watch the `incoming` directory.
+
 ## 3. Converter assessment and initial choice
 
-The first implementation should evaluate **Abogen Web UI v1.3.1** as the conversion engine. The release documentation covers text, EPUB, and PDF inputs; a sequential background job queue; MP3 and M4B output; and Audiobookshelf integration. Its web interface is actively developed, so run a short end-to-end conversion and confirm persistence and ABS behavior before treating it as the production workflow. The pinned release Compose file builds from source and defaults to the PyTorch CUDA 12.6 package index, which matches the GTX 1060 compatibility test. Override its mutable `abogen:latest` image name with a project-specific explicit version tag in our deployment registration.
+Abogen Web UI v1.3.1 is deployed as the initial conversion engine. The release documentation covers text, EPUB, and PDF inputs; a sequential background job queue; MP3 and M4B output; and Audiobookshelf integration. A short English text-to-MP3 job has completed with GPU use verified. Before treating the workflow as production-ready, configure and verify Audiobookshelf delivery, then decide whether a separate watched-folder scheduler is still required.
 
 | Candidate | Fit for this project | Decision |
 |---|---|---|
@@ -67,13 +75,13 @@ The first implementation should evaluate **Abogen Web UI v1.3.1** as the convers
 
 ### GTX 1060 software compatibility
 
-The GTX 1060 is Pascal compute capability 6.1. The CUDA 13 container test proves device visibility only. The PyTorch 2.12 CUDA 12.6 test successfully executed a CUDA tensor computation on the card, establishing that this compatible framework build can run GPU kernels. Abogen v1.3.1's GPU Compose defaults to the CUDA 12.6 PyTorch wheel index. Pin the PyTorch version instead of accepting the upstream empty/default value, and pin the source checkout and built image tag. Do not use CUDA 12.8 or CUDA 13 builds for this card without a specific compatibility test.
+The GTX 1060 is Pascal compute capability 6.1. The CUDA 13 container test proves device visibility only. Both a PyTorch 2.12 CUDA 12.6 tensor computation and an Abogen Kokoro text-to-MP3 conversion have run with the GPU. The registered Dockerfile pins PyTorch and torchvision individually, pins the Abogen source to commit `d30415ffe7f7439ba04f78c0617c7a1fa41f9a12`, pins the CUDA base image by digest, and tags the resulting image explicitly. Do not use CUDA 12.8 or CUDA 13 builds for this card without a specific compatibility test.
 
 ### Persistent storage plan
 
-Keep the 40 GiB boot disk for Ubuntu and container runtime files. The separate **100 GiB virtual data disk on Proxmox `zfs-data`** is created and mounted at `/srv/audiobook-factory`; last verified free space was about 93 GiB. The mount has `models`, `incoming`, `work`, and `output` directories. At the Proxmox storage inspection, `zfs-data` had about 1.2 TiB free and `local-lvm` had about 250 GiB free. Bind the distinct data directories into the Compose stack, and add persistent settings/cache paths as needed by the application.
+Keep the 40 GiB boot disk for Ubuntu and small system files. The separate **100 GiB virtual data disk on Proxmox `zfs-data`** is mounted at `/srv/audiobook-factory`; latest check showed about 75 GiB available. It holds Docker's configured data root, containerd's image store, Abogen's `models`, `incoming`, `work`, `output`, and `config` directories. At the Proxmox storage inspection, `zfs-data` had about 1.2 TiB free and `local-lvm` had about 250 GiB free.
 
-The VM is intended to be managed as a Docker Compose stack through the existing home-infrastructure workflow. Abogen's upstream Compose builds its image from the checked-out source and labels the result `abogen:latest`; the deployment should pin the source release and override that label with an explicit local version tag. Keep model, voice, upload, settings, temporary, and output data on the separate data disk.
+The VM is managed as a Docker Compose stack through the existing home-infrastructure workflow. `containers/abogen/` registers the stack for `gpuloads-01`, and the remote deployment script supports local image builds. Persistent model, voice, upload, settings, temporary, and output data live on the separate data disk. The initial UI setup uses MP3 output, American English voice `af_sarah`, and GPU enabled. Spanish and French Kokoro language codes are `e` and `f` respectively.
 
 ## 4. Target Architecture
 
@@ -324,12 +332,21 @@ Avoid hardcoding machine-specific paths in application logic.
 
 ## 8. Infrastructure Implementation
 
-### Phase 1: Proxmox GPU passthrough
+### Phase 1: Proxmox GPU passthrough — complete
 
-1. Use `bahamut` as the target Proxmox node; confirm the motherboard/firmware VT-d setting is enabled.
-2. Enable or verify Intel VT-d/IOMMU in firmware and Proxmox, then reboot the host during a maintenance window if required.
-3. Confirm the GPU and HDMI audio function are in a suitable IOMMU group and bind them for VFIO passthrough.
-4. Create the Linux VM with Q35 and OVMF/UEFI, then assign both GPU functions over PCIe.
-5. Verify the GPU from inside the guest before installing Docker and NVIDIA Container Toolkit.
+1. Use `bahamut` as the target Proxmox node.
+2. Enable Intel VT-d in firmware and verify active IOMMU support in Proxmox.
+3. Bind the GTX 1060 and HDMI audio function for VFIO passthrough.
+4. Create VM 211 (`gpuloads-01`) with Q35/OVMF and assign both GPU functions.
+5. Install the guest NVIDIA driver and NVIDIA Container Toolkit; verify GPU access and CUDA compute from the guest and Docker.
 
 Host inspection on 2026-10-16 found an EVGA NVIDIA GTX 1060 6 GB, not the previously assumed GTX 1070 8 GB. The user enabled Intel VT-d in firmware; IOMMU is active on Proxmox, and the GPU/audio pair is assigned to the VM through VFIO. The passthrough guest driver and GPU compute in a CUDA 12.6 container have been verified.
+
+### Phase 2: Container runtime and conversion engine
+
+1. Install Docker Compose v2 and configure the VM user's Docker access.
+2. Put Docker and containerd image storage on `/srv/audiobook-factory`.
+3. Deploy the pinned Abogen Web UI stack and persist model, settings, work, upload, and output data on the data disk.
+4. Verify a real GPU-backed text-to-MP3 conversion. **Complete:** 11.88-second MP3 generated; GPU allocation observed.
+5. Configure Audiobookshelf integration and verify delivery to the intended library.
+6. Decide whether unattended incoming-folder processing needs a separate scheduler or watcher.
