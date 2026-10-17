@@ -8,7 +8,7 @@ services:
       context: ${CONTAINERS_DATA}/build
       dockerfile: Dockerfile
       additional_contexts:
-        abogen-source: https://github.com/denizsafak/abogen.git#v1.3.1
+        abogen-source: https://github.com/denizsafak/abogen.git#d30415ffe7f7439ba04f78c0617c7a1fa41f9a12
     restart: unless-stopped
 
     ports:
