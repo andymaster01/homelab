@@ -46,9 +46,9 @@ The dedicated VM has been created on `bahamut` (Proxmox VM ID 211) and is runnin
 
 The guest NVIDIA driver is 580.178.04. Driver 595 was tested first, but its kernel module reported that the GTX 1060 is supported through the 580.xx legacy branch and ignored the card; it was replaced with 580.
 
-GPU container access is verified with `nvidia/cuda:13.0.1-base-ubuntu24.04` running `nvidia-smi`, which reported the GTX 1060 and 6144 MiB VRAM. The Proxmox guest agent is active and reports the VM network interfaces.
+GPU container access has been verified at two levels. `nvidia/cuda:13.0.1-base-ubuntu24.04` can see the GTX 1060 and its 6144 MiB VRAM. A CUDA tensor computation also succeeded in `pytorch/pytorch:2.12.0-cuda12.6-cudnn9-runtime` (`2.12.0+cu126`, CUDA available, device `GeForce GTX 1060 6GB`). The Proxmox guest agent is active and reports the VM network interfaces.
 
-The VM currently has about 33 GiB free on its 38 GiB root filesystem. Plan persistent model, incoming ebook, and completed audiobook storage before choosing a production converter image; model downloads can exceed the available system disk.
+The 40 GiB system disk is reserved for Ubuntu and container runtime files. A separate 100 GiB virtual disk on Proxmox `zfs-data` is attached, formatted ext4 with label `audiobook-data`, and mounted at `/srv/audiobook-factory`. The last guest check showed about 93 GiB available there. It contains `models`, `incoming`, `work`, and `output` directories owned by `ubuntu`. The guest and Proxmox host were unreachable from this workstation at the latest check, so current power/network status and free space should be rechecked when connectivity returns.
 
 The GTX 1060 is passed through from Proxmox to the VM and exposed to Docker containers through NVIDIA Container Toolkit.
 
@@ -56,23 +56,24 @@ Only one VM will own the GPU through standard PCIe passthrough, but multiple Doc
 
 ## 3. Converter assessment and initial choice
 
-The first implementation should use **Ebook2Audiobook** as the conversion engine. Its current project documentation describes headless Docker operation with GPU mode, direct `.txt`, EPUB, and PDF inputs, multilingual TTS, and MP3 output. This is the closest fit for generating audio from supplied text while keeping the converter as a small, replaceable component.
+The first implementation should evaluate **Abogen Web UI v1.3.1** as the conversion engine. The release documentation covers text, EPUB, and PDF inputs; a sequential background job queue; MP3 and M4B output; and Audiobookshelf integration. Its web interface is actively developed, so run a short end-to-end conversion and confirm persistence and ABS behavior before treating it as the production workflow. The pinned release Compose file builds from source and defaults to the PyTorch CUDA 12.6 package index, which matches the GTX 1060 compatibility test. Override its mutable `abogen:latest` image name with a project-specific explicit version tag in our deployment registration.
 
 | Candidate | Fit for this project | Decision |
 |---|---|---|
-| Ebook2Audiobook | Headless Docker conversion; text/EPUB/PDF input; multilingual engines; MP3 output; GPU option. It does not provide a watched-folder queue or podcast feed by itself. | **Select for the first converter deployment.** Add a watched-folder workflow only after verifying its headless command and model behavior. |
+| Abogen Web UI | Text/EPUB/PDF input; sequential jobs; MP3/M4B; Kokoro voices; Audiobookshelf integration. Its upstream v1.3.1 Compose builds locally with CUDA 12.6 by default. | **Preferred first deployment candidate.** Pin source to v1.3.1 and use an explicit local image tag. Validate a real short synthesis on the GTX 1060, then verify output and ABS integration. |
+| Ebook2Audiobook | Headless Docker conversion; text/EPUB/PDF input; multilingual engines; MP3 output; GPU option. It does not provide a watched-folder queue or podcast feed by itself. The current published GPU image uses CUDA 13, which is unsuitable for the Pascal GTX 1060. | Keep as an alternative only if a pinned custom build using a Pascal-compatible PyTorch/CUDA stack proves viable. |
 | Libratory | Strong PDF/EPUB library, API/MCP and chapter workflow; local Kokoro supports English, French, and Spanish. Its published headless Docker image uses CPU-only PyTorch, and its normal audiobook output is M4B, so GPU use in this VM would need further integration. | Keep as an option if PDF cleanup, OCR, or book-library management becomes the main need. |
 | EPUB to Audiobook | Closest built-in article-to-podcast workflow: queue, article RSS, MP3 chapters, and Audiobookshelf sync. Its documented default narration path is local CPU; GPU-specific engines are opt-in, and the documented voice coverage does not establish the required English, Spanish, and French local GPU workflow. | Revisit if article URL ingestion and a podcast RSS feed become top priorities. |
 
 ### GTX 1060 software compatibility
 
-The GTX 1060 is Pascal compute capability 6.1. The CUDA 13 container test above confirms Docker can expose the GPU and run `nvidia-smi`; it is not proof that a CUDA framework or TTS model can execute kernels on this GPU. CUDA 13 removed offline compilation and library support for Pascal, and PyTorch 2.8 CUDA 12.8 binaries removed Maxwell and Pascal support. Select and pin a converter image/build using a CUDA 12.x / PyTorch combination that still includes Pascal (`sm_61`), then verify an actual short synthesis before automating jobs. Do not select a `cuda128` or CUDA 13 build for this card without an explicit compatibility test.
+The GTX 1060 is Pascal compute capability 6.1. The CUDA 13 container test proves device visibility only. The PyTorch 2.12 CUDA 12.6 test successfully executed a CUDA tensor computation on the card, establishing that this compatible framework build can run GPU kernels. Abogen v1.3.1's GPU Compose defaults to the CUDA 12.6 PyTorch wheel index. Pin the PyTorch version instead of accepting the upstream empty/default value, and pin the source checkout and built image tag. Do not use CUDA 12.8 or CUDA 13 builds for this card without a specific compatibility test.
 
 ### Persistent storage plan
 
-Keep the 40 GiB boot disk for Ubuntu and container runtime files. Add a separate **100 GiB virtual data disk on Proxmox `zfs-data`** for Docker model caches, incoming text/ebooks, temporary conversion files, and completed audio. At inspection, `zfs-data` had about 1.2 TiB free; `local-lvm` had about 250 GiB free. Mount the new disk at `/srv/audiobook-factory` and bind distinct subdirectories into the Compose stack. The data disk has not yet been created.
+Keep the 40 GiB boot disk for Ubuntu and container runtime files. The separate **100 GiB virtual data disk on Proxmox `zfs-data`** is created and mounted at `/srv/audiobook-factory`; last verified free space was about 93 GiB. The mount has `models`, `incoming`, `work`, and `output` directories. At the Proxmox storage inspection, `zfs-data` had about 1.2 TiB free and `local-lvm` had about 250 GiB free. Bind the distinct data directories into the Compose stack, and add persistent settings/cache paths as needed by the application.
 
-The VM is intended to be managed as a Docker Compose stack through the existing home-infrastructure workflow. Pin the converter image to an explicit version or digest, and keep its model cache and generated audio on the data disk.
+The VM is intended to be managed as a Docker Compose stack through the existing home-infrastructure workflow. Abogen's upstream Compose builds its image from the checked-out source and labels the result `abogen:latest`; the deployment should pin the source release and override that label with an explicit local version tag. Keep model, voice, upload, settings, temporary, and output data on the separate data disk.
 
 ## 4. Target Architecture
 
@@ -129,25 +130,25 @@ All processing must happen locally. No mandatory cloud APIs, subscriptions, or e
 
 ## 5. Candidate Projects
 
-Evaluate the following open-source projects before deciding on the implementation.
+### Primary candidate: Abogen Web UI
 
-### Primary candidate: Ebook2Audiobook
-
-Repository: https://github.com/pegakmop/ebook2audiobookXTTS
+Repository and pinned release: https://github.com/denizsafak/abogen/tree/v1.3.1
 
 Reasons:
 
-- Ebook-to-audiobook conversion.
-- Headless execution.
-- Docker deployment.
-- GPU acceleration.
-- Multilingual text-to-speech.
-- Chaptered audiobook output.
-- Support for XTTSv2 and other engines.
+- Accepts text, EPUB, and PDF inputs, with queue mode and sequential background jobs.
+- Produces MP3 and M4B (with chapters), among other formats.
+- The Web UI documents Audiobookshelf integration.
+- Release v1.3.1 includes a GPU-enabled Compose stack whose base is CUDA 12.6.
+- Kokoro offers voices across English, Spanish, and French; verify the chosen voices during an end-to-end sample.
 
-This is the preferred starting point for automating well-formatted EPUB conversion.
+Deployment detail to resolve: the upstream Dockerfile's `TORCH_VERSION` build argument applies one version string to `torch`, `torchvision`, and `torchaudio`, although those packages use different version numbers. Build a small project-owned Dockerfile/override that pins a compatible CUDA 12.6 package set individually (starting from the tested PyTorch 2.12.0+cu126, torchvision 0.27.0+cu126, and torchaudio 2.12.0+cu126) and gives the image an explicit tag. Check Abogen's dependency compatibility during the first build and synthesis; do not rely on upstream's blank argument, which installs whichever packages are current at build time.
 
-Verify which official/prebuilt GPU-enabled image tags support the NVIDIA GTX 1060.
+### Alternative: Ebook2Audiobook
+
+Repository: https://github.com/DrewThomasson/ebook2audiobook
+
+It offers headless Docker conversion, multilingual engines, and MP3 output. Recent upstream GPU images use CUDA 13, which does not support the GTX 1060's Pascal architecture. Reconsider only if an explicitly pinned CUDA 12.6 build is straightforward to maintain.
 
 ### Alternative: Libratory
 
@@ -184,7 +185,7 @@ Evaluate whether it provides a simpler, more complete unattended workflow.
 
 These are secondary options because prebuilt official Docker images or fully unattended deployment have not been confirmed.
 
-**Important:** Do not assume any project's current features, image tags, GPU support, or APIs. Verify them against its latest documentation before implementing.
+**Important:** Do not assume any project's current features, image tags, GPU support, or APIs. Verify them against its pinned release documentation before implementing.
 
 ## 6. Functional Requirements
 
@@ -331,4 +332,4 @@ Avoid hardcoding machine-specific paths in application logic.
 4. Create the Linux VM with Q35 and OVMF/UEFI, then assign both GPU functions over PCIe.
 5. Verify the GPU from inside the guest before installing Docker and NVIDIA Container Toolkit.
 
-Host inspection on 2026-10-16 found an EVGA NVIDIA GTX 1060 6 GB, not the previously assumed GTX 1070 8 GB. VT-d is not currently active: the running kernel exposes no DMAR table or IOMMU groups, and its boot log contains no VT-d initialization message. The firmware setting has not yet been inspected directly.
+Host inspection on 2026-10-16 found an EVGA NVIDIA GTX 1060 6 GB, not the previously assumed GTX 1070 8 GB. The user enabled Intel VT-d in firmware; IOMMU is active on Proxmox, and the GPU/audio pair is assigned to the VM through VFIO. The passthrough guest driver and GPU compute in a CUDA 12.6 container have been verified.
