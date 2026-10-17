@@ -16,6 +16,27 @@ The entire process should run unattended. I want to drop an ebook into a directo
 
 **Primary goal:** Minimize custom development by integrating existing open-source projects and using official, prebuilt Docker images wherever possible.
 
+## Current implementation status (2026-10-17)
+
+The infrastructure and first conversion path are deployed and verified. The current working workflow is **upload text in Abogen's web UI and generate an MP3 with the GTX 1060**. The broader unattended ebook-to-Audiobookshelf workflow is not complete yet: the current UI does not watch the incoming directory, and Audiobookshelf delivery has not been configured or verified.
+
+### Delivered and verified
+
+- Proxmox VM 211 `gpuloads-01` on `bahamut`, Ubuntu 26.04.1 LTS, with the GTX 1060 and its HDMI audio function passed through.
+- Guest NVIDIA driver, NVIDIA Container Toolkit, Docker Engine, and Docker Compose installed. NVIDIA GPU visibility and a CUDA PyTorch computation were verified in a container.
+- A dedicated 100 GiB virtual data disk is mounted at `/srv/audiobook-factory`. Docker's image data and containerd's content/snapshot store, as well as Abogen state and outputs, live there.
+- Abogen Web UI v1.3.1 is deployed from a pinned source commit and CUDA base image, with an explicit locally built image tag.
+- A Kokoro English text-to-MP3 conversion completed on the GPU. The retained sample is `/srv/audiobook-factory/output/20261017-005305_GPU_Smoke_Test_English/GPU_Smoke_Test_English.mp3` (11.88 seconds, 90,508 bytes). GPU memory use rose from about 5 MiB idle to 737 MiB during synthesis.
+- The Proxmox guest agent is active. The web UI was reachable at `http://192.168.1.32:8808` from the LAN when last checked.
+
+### Known gaps before the original end-to-end goal is met
+
+- Abogen currently accepts uploads and queues work through its web UI; no watcher or scheduler consumes files placed in `incoming`.
+- Audiobookshelf is reachable at `192.168.1.151:13378`, but no API token/library destination is configured and delivery has not been tested.
+- The deployed UI has no application login configured. Restrict access to the trusted LAN until access control is addressed.
+- The verified output is MP3 from plain text. EPUB/PDF quality, Spanish and French synthesis, long-book behavior, metadata/cover handling, M4B output, and failure/retry behavior still need evaluation.
+- The current VM guest address is DHCP (`192.168.1.32`); make it static or reserve it in DHCP before relying on fixed integrations.
+
 ## 2. Existing Infrastructure
 
 ### Proxmox host
@@ -61,6 +82,57 @@ Only one VM will own the GPU through standard PCIe passthrough, but multiple Doc
 - Docker Compose v2.40.3 is installed. Docker's `data-root` and containerd's image/snapshot store are both configured under `/srv/audiobook-factory`, keeping the multi-gigabyte image layers off the boot disk.
 - A text-to-MP3 smoke conversion completed using Kokoro voice `af_sarah` and the GTX 1060. The generated sample is 11.88 seconds / 90,508 bytes at `/srv/audiobook-factory/output/20261017-005305_GPU_Smoke_Test_English/GPU_Smoke_Test_English.mp3`. During the run, GPU memory use rose from about 5 MiB idle to about 737 MiB.
 - Abogen is reachable from the LAN. No application authentication or Audiobookshelf credentials have been configured yet. The UI uploads and queues jobs; it does not automatically watch the `incoming` directory.
+
+### Issues found and fixes applied
+
+| Issue | Cause | Resolution |
+|---|---|---|
+| GTX 1060 was not supported by the initially tested driver 595 | Pascal support is in the NVIDIA 580 legacy driver branch; the 595 module ignored this card. | Installed guest driver 580.178.04, then verified the device in the VM and in a GPU-enabled container. |
+| Abogen's upstream build did not provide a stable, suitable PyTorch set for this GPU | The upstream Dockerfile applies one Torch version argument to packages with different release numbers; CUDA 12.6 has no matching `torchaudio` 2.12 wheel. | Added a project-owned Dockerfile, pinned CUDA 12.6.3 base digest and Abogen source commit, installed `torch==2.12.0+cu126` and `torchvision==0.27.0+cu126` individually, and omitted unused `torchaudio`. |
+| Container image build exhausted space on the VM boot disk | Docker 29 uses a containerd image/snapshot store in addition to Docker's configured `data-root`; moving only Docker's root did not move all image data. | Stopped Docker/containerd, migrated the containerd store, configured `/etc/containerd/config.toml` root as `/srv/audiobook-factory/containerd`, and restarted both services. Docker `data-root` is also under `/srv/audiobook-factory`. |
+| First manually submitted conversion did not start | The Abogen job request had no enabled chapter. | Retried with the chapter enabled, as the UI does when creating a job. |
+| Kokoro rejected the American English job | The model expects language code `a`, not generic code `en`. | Selected `af_sarah` with language code `a`; the conversion completed. Kokoro codes for Spanish and French are `e` and `f`. |
+| SSH from the user's workstation to the guest did not connect during setup | Guest SSH access was unavailable from the workstation at that time. | The Proxmox guest agent was enabled so Proxmox could report guest status and network details. This did not repair workstation SSH; SSH remains a separate access issue. The web UI was reachable over the LAN. |
+
+### Actual architecture
+
+```text
+LAN client
+   | HTTP :8808
+   v
+gpuloads-01 (Proxmox VM 211, Ubuntu 26.04.1)
+   | Docker Compose service: abogen
+   | NVIDIA Container Toolkit -> passed-through GTX 1060 6 GB
+   +-- Abogen UI / queue / Kokoro text-to-speech -> MP3
+   |
+   +-- /srv/audiobook-factory (100 GiB ext4 data disk)
+       +-- docker/ and containerd/ image stores
+       +-- incoming/ -> /data/uploads (UI upload staging)
+       +-- output/   -> /data/outputs (generated files)
+       +-- work/     -> /data/cache (temporary files)
+       +-- config/   -> /config (Abogen settings)
+       +-- models/   -> /models (voice and Hugging Face caches)
+
+Audiobookshelf at 192.168.1.151:13378 is separate; no delivery path is configured yet.
+```
+
+The project stack is registered in `containers/abogen/`. It is built locally on the VM because the pinned GPU-compatible image is custom, then managed with Docker Compose. `scripts/remote-deployment.sh` copies the compose file, environment file and build context to the guest, creates/preserves the persistent directories, and runs `docker compose up -d --build` remotely.
+
+### Reproducing the deployed container setup
+
+These steps reproduce the **container deployment on an already prepared VM**. The VM must have the passthrough GPU working, Docker Engine and Compose, NVIDIA Container Toolkit configured for Docker, and `/srv/audiobook-factory` mounted with sufficient free space. For a fresh VM, first reproduce the completed Proxmox/Ubuntu preparation described in Phase 1 and the host setup table above.
+
+1. Check out this repository on the deployment workstation, select the project branch containing `containers/abogen/`, and confirm SSH as `ubuntu@192.168.1.32` works. The deployment script uses SSH and SCP.
+2. Attach a 100 GiB disk, format it as ext4 with label `audiobook-data`, and mount it persistently at `/srv/audiobook-factory` (using its UUID in `/etc/fstab`). Confirm `findmnt /srv/audiobook-factory` shows the disk. Configure `/etc/docker/daemon.json` with `{"data-root":"/srv/audiobook-factory/docker"}` and set `root = "/srv/audiobook-factory/containerd"` in `/etc/containerd/config.toml`; ensure both directories exist, then restart `containerd` and `docker`. Do this before building the large image so image layers stay on the data disk.
+3. Verify prerequisites on the VM: `nvidia-smi`, `docker --version`, `docker compose version`, and `docker run --rm --gpus all nvidia/cuda:13.0.1-base-ubuntu24.04 nvidia-smi`. The CUDA container check proves device exposure. Also verify PyTorch/CUDA compatibility with `docker run --rm --gpus all pytorch/pytorch:2.12.0-cuda12.6-cudnn9-runtime python -c 'import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))'`; expected output includes `True` and `GeForce GTX 1060 6GB`.
+4. Confirm `containers/abogen/.env.remote` has `CONTAINERS_DATA=/srv/audiobook-factory`, UID/GID 1000, port 8808, and the intended timezone. This file is deployment configuration, not a place for secrets.
+5. Review `containers/abogen/config.json`: `remote` is the guest address, `remote_dir` is the Compose project directory on the guest, `build_locally` is `true`, and its data directories and `build` item match the Compose mounts/context.
+6. Deploy from the repository root with `just deploy-remote abogen` (equivalent to `./scripts/remote-deployment.sh abogen`). The script connects as `ubuntu`, copies the stack and Docker build context, ensures persistent directories are owned by UID/GID 1000, then builds and starts the service remotely. The first build and first app start take longer because dependencies, model voices, and the Kokoro model are downloaded.
+7. Open `http://192.168.1.32:8808`. In Abogen's initial setup, choose MP3, enable GPU, choose a Kokoro voice (for example `af_sarah`), and use language code `a` for American English. Settings are persisted in `config/`; models and voice files are persisted in `models/`.
+8. Create a short text job in the UI, enable its chapter, and submit. Verify the job completes and an MP3 appears under `/srv/audiobook-factory/output/`. For this known-good sample use an English text, `af_sarah`, language `a`, MP3 output, and GPU enabled.
+9. For a source rebuild, `just deploy-remote abogen` runs the local build on the VM because `build_locally` is enabled. To inspect service logs or status, connect to the guest and run `cd /home/ubuntu/compose/abogen && docker compose --env-file .env.remote -f docker-compose.yml ps` or `logs --tail=100 abogen`.
+
+The current known-good deployment pins Abogen source commit `d30415ffe7f7439ba04f78c0617c7a1fa41f9a12`, the CUDA base image digest shown in `containers/abogen/build/Dockerfile`, Torch 2.12.0+cu126, and torchvision 0.27.0+cu126. Keep these pins together when reproducing; changing CUDA/PyTorch versions requires retesting this Pascal GPU.
 
 ## 3. Converter assessment and initial choice
 
