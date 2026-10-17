@@ -54,7 +54,27 @@ The GTX 1060 is passed through from Proxmox to the VM and exposed to Docker cont
 
 Only one VM will own the GPU through standard PCIe passthrough, but multiple Docker containers within that VM can share it.
 
-## 3. Target Architecture
+## 3. Converter assessment and initial choice
+
+The first implementation should use **Ebook2Audiobook** as the conversion engine. Its current project documentation describes headless Docker operation with GPU mode, direct `.txt`, EPUB, and PDF inputs, multilingual TTS, and MP3 output. This is the closest fit for generating audio from supplied text while keeping the converter as a small, replaceable component.
+
+| Candidate | Fit for this project | Decision |
+|---|---|---|
+| Ebook2Audiobook | Headless Docker conversion; text/EPUB/PDF input; multilingual engines; MP3 output; GPU option. It does not provide a watched-folder queue or podcast feed by itself. | **Select for the first converter deployment.** Add a watched-folder workflow only after verifying its headless command and model behavior. |
+| Libratory | Strong PDF/EPUB library, API/MCP and chapter workflow; local Kokoro supports English, French, and Spanish. Its published headless Docker image uses CPU-only PyTorch, and its normal audiobook output is M4B, so GPU use in this VM would need further integration. | Keep as an option if PDF cleanup, OCR, or book-library management becomes the main need. |
+| EPUB to Audiobook | Closest built-in article-to-podcast workflow: queue, article RSS, MP3 chapters, and Audiobookshelf sync. Its documented default narration path is local CPU; GPU-specific engines are opt-in, and the documented voice coverage does not establish the required English, Spanish, and French local GPU workflow. | Revisit if article URL ingestion and a podcast RSS feed become top priorities. |
+
+### GTX 1060 software compatibility
+
+The GTX 1060 is Pascal compute capability 6.1. The CUDA 13 container test above confirms Docker can expose the GPU and run `nvidia-smi`; it is not proof that a CUDA framework or TTS model can execute kernels on this GPU. CUDA 13 removed offline compilation and library support for Pascal, and PyTorch 2.8 CUDA 12.8 binaries removed Maxwell and Pascal support. Select and pin a converter image/build using a CUDA 12.x / PyTorch combination that still includes Pascal (`sm_61`), then verify an actual short synthesis before automating jobs. Do not select a `cuda128` or CUDA 13 build for this card without an explicit compatibility test.
+
+### Persistent storage plan
+
+Keep the 40 GiB boot disk for Ubuntu and container runtime files. Add a separate **100 GiB virtual data disk on Proxmox `zfs-data`** for Docker model caches, incoming text/ebooks, temporary conversion files, and completed audio. At inspection, `zfs-data` had about 1.2 TiB free; `local-lvm` had about 250 GiB free. Mount the new disk at `/srv/audiobook-factory` and bind distinct subdirectories into the Compose stack. The data disk has not yet been created.
+
+The VM is intended to be managed as a Docker Compose stack through the existing home-infrastructure workflow. Pin the converter image to an explicit version or digest, and keep its model cache and generated audio on the data disk.
+
+## 4. Target Architecture
 
 ```text
                   PROXMOX HOST
@@ -107,7 +127,7 @@ Only one VM will own the GPU through standard PCIe passthrough, but multiple Doc
 
 All processing must happen locally. No mandatory cloud APIs, subscriptions, or external TTS services.
 
-## 4. Candidate Projects
+## 5. Candidate Projects
 
 Evaluate the following open-source projects before deciding on the implementation.
 
@@ -166,7 +186,7 @@ These are secondary options because prebuilt official Docker images or fully una
 
 **Important:** Do not assume any project's current features, image tags, GPU support, or APIs. Verify them against its latest documentation before implementing.
 
-## 5. Functional Requirements
+## 6. Functional Requirements
 
 ### FR-01: Automatic file discovery
 
@@ -272,7 +292,7 @@ Persist downloaded AI models to avoid repeatedly downloading them.
 
 Ensure conversion jobs can recover safely from container restarts, either through native checkpointing or by retrying.
 
-## 6. Proposed Directory Structure
+## 7. Proposed Directory Structure
 
 ```text
 /audiobook-factory/
@@ -301,7 +321,7 @@ Use configurable paths and persistent Docker volumes or bind mounts.
 
 Avoid hardcoding machine-specific paths in application logic.
 
-## 7. Infrastructure Implementation
+## 8. Infrastructure Implementation
 
 ### Phase 1: Proxmox GPU passthrough
 
