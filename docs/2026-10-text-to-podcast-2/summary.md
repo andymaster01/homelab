@@ -22,18 +22,34 @@ Defuddle works best with regular article pages; paywalled or JavaScript-heavy si
 ## Intended workflow
 
 ```text
-URL → Defuddle ─┐
-                ├→ clean text → split into chapters → local TTS → MP3 in output folder
-PDF / EPUB → Docling ┘
+                 Web front end
+             URL / PDF / EPUB submission
+                       |
+                       v
+              Small worker service
+              /                 \
+       URL → Defuddle       PDF/EPUB → Docling
+              \                 /
+                 clean text
+                     |
+             split by chapter
+                     |
+                local TTS
+                     |
+               MP3 output
 ```
 
-The initial intake accepts URLs, PDFs, and EPUBs. Process one conversion at a time and keep failed jobs visible for retry.
+The web front end accepts URL submissions and PDF/EPUB uploads. The worker service creates and tracks jobs, invokes the appropriate extractor, and writes extracted chapter files and metadata to persistent storage. It reports progress and failures through the front end. Process jobs sequentially at first and keep failed jobs available for retry.
+
+For URL jobs, the worker passes the submitted URL to Defuddle's local CLI. For PDF and EPUB jobs, it passes the uploaded file to Docling, using its local CLI or HTTP API. The worker saves normalized chapter text as separate Markdown files, plus metadata and job status. The TTS stage consumes those chapter files and writes MP3 output to the configured folder.
+
+This is the planned architecture only. No services, containers, or application code are being implemented in this phase.
 
 ## Decisions to make after the Defuddle proof of concept
 
 1. Which converter can accept extracted chapters automatically and generate MP3?
 2. Can it use the GTX 1060, or is CPU conversion acceptable?
-3. What is the simplest way to submit URLs and files: a small web form, watched folder, or both?
+3. Choose the web front end and job-status behavior for the planned intake service.
 
 Abogen is already deployed and GPU-verified, but has no documented job-submission API. Libratory has a documented API and Docker deployment, but its published image uses CPU-only PyTorch. Verify current pinned versions before choosing either.
 
@@ -45,4 +61,4 @@ See the [original setup notes](../2026-10-text-to-podcast/summary.md) for deploy
 
 ## Status
 
-Planning. Defuddle is selected as the starting point for URL extraction, and Docling for PDF/EPUB extraction. Chapter splitting, TTS converter, and intake interface still need to be proven or selected.
+Planning only. Defuddle is selected for URL extraction, and Docling for PDF/EPUB extraction. The planned interface is a web front end backed by a small worker service. Chapter splitting and TTS converter remain design decisions to validate before implementation.
