@@ -1,5 +1,7 @@
 # Project: Self-Hosted AI Audiobook Factory
 
+> **Historical deployment record:** Abogen was removed from the VM on 2026-10-18. The deployment details below describe its former setup and are retained as history; use `docs/2026-10-text-to-podcast-2/summary.md` for the current workflow.
+
 ## 1. Objective
 
 Build a fully self-hosted, automated audiobook generation system running in my Proxmox home lab.

@@ -51,11 +51,11 @@ This is the planned architecture only. No services, containers, or application c
 2. Can it use the GTX 1060, or is CPU conversion acceptable?
 3. Choose the web front end and job-status behavior for the planned intake service.
 
-Abogen is already deployed and GPU-verified, but has no documented job-submission API. Libratory has a documented API and Docker deployment, but its published image uses CPU-only PyTorch. Verify current pinned versions before choosing either.
+Voicebox is deployed with an API and writes WAV files to the shared media folder; an adjacent converter creates MP3 files. Abogen has been removed from the VM. For automated ebook ingestion, the worker can submit extracted text to Voicebox and collect the resulting audio.
 
 ## Existing setup
 
-The audiobook VM is Proxmox VM 211 `gpuloads-01`, with Ubuntu, a passed-through GTX 1060 6 GB, Docker, and persistent storage at `/srv/audiobook-factory`. Abogen v1.3.1 is deployed there and has generated a test MP3.
+The audiobook VM is Proxmox VM 211 `gpuloads-01`, with Ubuntu, a passed-through GTX 1060 6 GB, Docker, and persistent storage at `/srv/audiobook-factory`. Voicebox and Defuddle are deployed there. Voicebox synthesis runs on CPU and writes WAV files under `/mnt/media/podcast/manual`; the MP3 converter creates matching MP3 files.
 
 See the [original setup notes](../2026-10-text-to-podcast/summary.md) for deployment details.
 
