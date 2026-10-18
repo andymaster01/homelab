@@ -1,6 +1,6 @@
 {
   "remote": "192.168.1.32",
-  "remote_dir": "/home/ubuntu/compose/voicebox",
+  "remote_dir": "/home/ubuntu/compose/text-to-audio",
   "port": 17600,
   "build_locally": true,
   "compose_bake": false,

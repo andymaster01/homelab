@@ -81,3 +81,32 @@ services:
         limits:
           cpus: "1.0"
           memory: 512M
+
+  defuddle:
+    image: defuddle-api:0.19.5
+    build:
+      context: ${CONTAINERS_DATA}/build-context/defuddle-api
+    container_name: text-to-audio-defuddle
+    restart: unless-stopped
+
+    ports:
+      - "192.168.1.32:17601:8080"
+
+    environment:
+      PORT: "8080"
+      OUTPUT_DIR: /output
+      PUBLIC_BASE_URL: http://192.168.1.32:17601
+      OUTPUT_HOST_PATH: /mnt/media/podcast/manual
+
+    volumes:
+      - type: bind
+        source: /mnt/media/podcast/manual
+        target: /output
+        bind:
+          create_host_path: false
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M

@@ -1,0 +1,12 @@
+{
+  "name": "text-to-audio-defuddle-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "defuddle": "0.19.5"
+  }
+}

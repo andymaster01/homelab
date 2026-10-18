@@ -27,4 +27,7 @@ fi
 mkdir -p "$build_context_dir"
 git -C "$checkout_dir" archive "$source_revision" | tar -x -C "$build_context_dir"
 
+mkdir -p "$build_context_dir/defuddle-api"
+cp -R "$script_dir/defuddle-api/." "$build_context_dir/defuddle-api/"
+
 echo "Prepared Voicebox source at $actual_revision"
