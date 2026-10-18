@@ -10,6 +10,7 @@
   ],
   "data_directories": [
     { "path": "data", "uid": 1000, "gid": 1000 },
-    { "path": "models", "uid": 1000, "gid": 1000 }
+    { "path": "models", "uid": 1000, "gid": 1000 },
+    { "path": "converter", "uid": 1000, "gid": 1000 }
   ]
 }
