@@ -1,7 +1,7 @@
 # Text to audio
 
-This stack runs Voicebox, its WAV to MP3 converter, and a Defuddle URL extractor
-on `gpuloads-01`. Prepare the pinned Voicebox source once with
+This stack runs Voicebox, its WAV to MP3 converter, Docling Serve, and a
+Defuddle URL extractor on `gpuloads-01`. Prepare the pinned Voicebox source once with
 `bash ./containers/text-to-audio/prepare-source.sh`, then deploy with
 `just deploy-remote text-to-audio`.
 
@@ -19,6 +19,27 @@ Profiles, history, and model data remain under
 separate Compose service using the Voicebox image's bundled FFmpeg. The image
 is built from pinned upstream commit
 `8af7efe62fab8d33e2a5dfbedabaa45f68a5184f`.
+
+## Extract PDF and EPUB files
+
+Docling Serve runs on CPU at `http://192.168.1.32:17602`. Its API docs are at
+`/docs`, and its conversion playground is at `/ui`. The pinned CPU image includes
+the default extraction models and is several gigabytes in size.
+
+Convert an EPUB to Markdown with:
+
+```sh
+curl -fsS -X POST http://192.168.1.32:17602/v1/convert/file \
+  -H 'accept: application/json' \
+  -F 'files=@book.epub;type=application/epub+zip' \
+  -F 'from_formats=epub' \
+  -F 'to_formats=md'
+```
+
+For a PDF, use the same endpoint with `from_formats=pdf` and a PDF filename.
+The response contains extracted Markdown; chapter splitting and saving named
+chapter files are not automated yet. The API has no authentication configured
+and is available on the VM's LAN address only.
 
 ## Extract clean Markdown from a URL
 

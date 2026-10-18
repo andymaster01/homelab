@@ -82,6 +82,25 @@ services:
           cpus: "1.0"
           memory: 512M
 
+  docling:
+    image: ghcr.io/docling-project/docling-serve-cpu:v1.37.0
+    container_name: text-to-audio-docling
+    restart: unless-stopped
+
+    ports:
+      - "192.168.1.32:17602:5001"
+
+    environment:
+      DOCLING_DEVICE: cpu
+      DOCLING_SERVE_ENABLE_UI: "true"
+      DOCLING_SERVE_LOG_LEVEL: INFO
+
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 6G
+
   defuddle:
     image: defuddle-api:0.19.5
     build:

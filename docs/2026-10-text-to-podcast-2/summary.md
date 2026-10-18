@@ -43,12 +43,12 @@ The web front end accepts URL submissions and PDF/EPUB uploads. The worker servi
 
 For URL jobs, the worker passes the submitted URL to Defuddle's local CLI. For PDF and EPUB jobs, it passes the uploaded file to Docling, using its local CLI or HTTP API. The worker saves normalized chapter text as separate Markdown files, plus metadata and job status. The TTS stage consumes those chapter files and writes MP3 output to the configured folder.
 
-This is the planned architecture only. No services, containers, or application code are being implemented in this phase.
+The intake front end and worker are still planned; extraction and speech services are being deployed and tested as separate building blocks.
 
-## Decisions to make after the Defuddle proof of concept
+## Next implementation steps
 
-1. Which converter can accept extracted chapters automatically and generate MP3?
-2. Can it use the GTX 1060, or is CPU conversion acceptable?
+1. Test Docling extraction against representative EPUBs and PDFs, including chapter boundaries.
+2. Build a worker that saves chapter Markdown, submits each chapter to Voicebox, and groups MP3 output by book.
 3. Choose the web front end and job-status behavior for the planned intake service.
 
 Voicebox is deployed with an API and writes WAV files to the shared media folder; an adjacent converter creates MP3 files. Abogen has been removed from the VM. For automated ebook ingestion, the worker can submit extracted text to Voicebox and collect the resulting audio.
@@ -61,4 +61,4 @@ See the [original setup notes](../2026-10-text-to-podcast/summary.md) for deploy
 
 ## Status
 
-Planning only. Defuddle is selected for URL extraction, and Docling for PDF/EPUB extraction. The planned interface is a web front end backed by a small worker service. Chapter splitting and TTS converter remain design decisions to validate before implementation.
+Defuddle, Docling Serve, Voicebox, and the WAV-to-MP3 converter are deployed. Defuddle and Docling expose HTTP APIs, and Voicebox generates WAV files that the converter turns into MP3. The planned front end and worker are not implemented; chapter splitting and book-level output organization remain to be built and validated.
