@@ -56,6 +56,15 @@ if ! jq -e '(.build_locally // false) | type == "boolean"' "$config_file" >/dev/
   exit 1
 fi
 build_locally="$(jq -r '.build_locally // false' "$config_file")"
+if ! jq -e '(.compose_bake // true) | type == "boolean"' "$config_file" >/dev/null; then
+  echo "compose_bake must be a boolean in $config_file" >&2
+  exit 1
+fi
+compose_bake="$(jq -r 'if has("compose_bake") then .compose_bake else true end' "$config_file")"
+compose_environment=""
+if [[ "$compose_bake" == false ]]; then
+  compose_environment="COMPOSE_BAKE=false "
+fi
 item_paths=()
 while IFS= read -r item_path; do
   item_paths+=("$item_path")
@@ -208,7 +217,7 @@ for volume_seed in "${volume_seeds[@]}"; do
   IFS=$'\t' read -r seed_source seed_service seed_target <<< "$volume_seed"
 
   echo "Creating service container for volume seed: $seed_service"
-  ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull '$seed_service' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml create '$seed_service'"
+  ssh "$ssh_target" "cd '$remote_container_dir' && ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull '$seed_service' && ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml create '$seed_service'"
 
   seed_container_id="$(ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml ps -aq '$seed_service' | head -n 1")"
   if [[ -z "$seed_container_id" ]]; then
@@ -230,18 +239,18 @@ echo "Starting $container_name remotely..."
 if (( ${#secret_environment_variables[@]} > 0 )); then
   if [[ "$build_locally" == true ]]; then
     printf '%s\n' "${secret_values[@]}" | ssh "$ssh_target" \
-      "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
+      "cd '$remote_container_dir' && $remote_secret_reads ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
   else
     for compose_action in "pull" "up -d"; do
       printf '%s\n' "${secret_values[@]}" | ssh "$ssh_target" \
-        "cd '$remote_container_dir' && $remote_secret_reads PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
+        "cd '$remote_container_dir' && $remote_secret_reads ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml $compose_action"
     done
   fi
 else
   if [[ "$build_locally" == true ]]; then
-    ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
+    ssh "$ssh_target" "cd '$remote_container_dir' && ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d --build"
   else
-    ssh "$ssh_target" "cd '$remote_container_dir' && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
+    ssh "$ssh_target" "cd '$remote_container_dir' && ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml pull && ${compose_environment}PORT='$port' docker compose --env-file .env.remote -f docker-compose.yml up -d"
   fi
 fi
 
