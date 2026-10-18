@@ -44,6 +44,10 @@
           href: http://192.168.1.130:3001/
 
 - Media:
+    - Voicebox:
+        - icon: mdi-account-voice
+          href: http://192.168.1.32:17600/
+
     - Abogen:
         - icon: mdi-microphone
           href: http://192.168.1.32:8808
