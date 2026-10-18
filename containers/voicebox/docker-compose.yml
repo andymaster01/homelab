@@ -13,6 +13,11 @@ services:
 
     volumes:
       - ${CONTAINERS_DATA}/data:/app/data
+      - type: bind
+        source: /mnt/media/podcast/manual
+        target: /app/data/generations
+        bind:
+          create_host_path: false
       - ${CONTAINERS_DATA}/models:/home/voicebox/.cache/huggingface
 
     environment:

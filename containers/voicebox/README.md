@@ -1,6 +1,6 @@
 # Voicebox
 
-Voicebox runs on `gpuloads-01` as a CPU-only API trial. Prepare the pinned build
+Voicebox runs on `gpuloads-01` as a CPU-only service. Prepare the pinned build
 source once with `bash ./containers/voicebox/prepare-source.sh`, then deploy with
 `just deploy-remote voicebox`. Its API and web UI are available at
 `http://192.168.1.32:17600`; OpenAPI docs are at `/docs`.
@@ -31,9 +31,22 @@ curl -fsS -X POST http://192.168.1.32:17600/generate \
 
 The `POST /generate` response includes a generation ID. Follow progress with
 `GET /generate/{id}/status` and retrieve the result from
-`GET /history/{id}/export-audio`. Voicebox writes WAV audio; convert it to MP3
-as a separate step if needed. Generated audio and profiles persist under
-`/srv/audiobook-factory/voicebox/data` on the host.
+`GET /history/{id}/export-audio`. Voicebox writes WAV audio to
+`/mnt/media/podcast/manual` on the shared media server (bahamut,
+`192.168.1.101`). The VM mounts the NFS export at `/mnt/media`, then
+bind-mounts that output folder into the container at `/app/data/generations`.
+Profiles, history, and model data remain under
+`/srv/audiobook-factory/voicebox/data` on the VM. Convert WAV audio to MP3 as a
+separate step if needed.
+
+The `mnt-media.mount` systemd unit in this directory keeps the NFS mount
+available across VM restarts. Install it on the VM with:
+
+```sh
+sudo install -D -m 644 containers/voicebox/mnt-media.mount /etc/systemd/system/mnt-media.mount
+sudo systemctl daemon-reload
+sudo systemctl enable --now mnt-media.mount
+```
 
 The image is built from pinned upstream commit
 `8af7efe62fab8d33e2a5dfbedabaa45f68a5184f`.

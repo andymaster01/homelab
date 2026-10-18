@@ -1,0 +1,13 @@
+[Unit]
+Description=Media NFS share from bahamut
+Wants=network-online.target
+After=network-online.target
+
+[Mount]
+What=192.168.1.101:/mnt/media
+Where=/mnt/media
+Type=nfs
+Options=rw,hard,_netdev,nofail
+
+[Install]
+WantedBy=multi-user.target
