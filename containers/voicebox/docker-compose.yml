@@ -35,6 +35,9 @@ services:
     container_name: voicebox-mp3-converter
     restart: unless-stopped
 
+    healthcheck:
+      disable: true
+
     command:
       - /bin/sh
       - -c
