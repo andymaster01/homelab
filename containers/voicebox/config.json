@@ -5,7 +5,8 @@
   "build_locally": true,
   "compose_bake": false,
   "items": [
-    { "path": "build-context", "type": "folder" }
+    { "path": "build-context", "type": "folder" },
+    { "path": "converter", "type": "folder" }
   ],
   "data_directories": [
     { "path": "data", "uid": 1000, "gid": 1000 },

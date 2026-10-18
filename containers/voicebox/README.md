@@ -35,9 +35,10 @@ The `POST /generate` response includes a generation ID. Follow progress with
 `/mnt/media/podcast/manual` on the shared media server (bahamut,
 `192.168.1.101`). The VM mounts the NFS export at `/mnt/media`, then
 bind-mounts that output folder into the container at `/app/data/generations`.
-Profiles, history, and model data remain under
-`/srv/audiobook-factory/voicebox/data` on the VM. Convert WAV audio to MP3 as a
-separate step if needed.
+The MP3 converter watches that same folder and creates a matching `.mp3` file
+for each completed `.wav`. Both formats remain in the shared folder. Profiles,
+history, and model data remain under `/srv/audiobook-factory/voicebox/data` on
+the VM.
 
 The `mnt-media.mount` systemd unit in this directory keeps the NFS mount
 available across VM restarts. Install it on the VM with:
