@@ -48,6 +48,10 @@
         - icon: mdi-account-voice
           href: http://192.168.1.32:17600/
 
+    - Docling:
+        - icon: mdi-file-document-outline
+          href: http://192.168.1.32:17602/ui
+
     - BookOrbit:
         - icon: mdi-book-open-page-variant
           href: http://192.168.1.130:3000/
