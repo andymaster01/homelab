@@ -97,9 +97,11 @@ job. Voice profiles are proxied from Voicebox at `GET /api/profiles`.
 `POST /api/jobs/{id}/cancel` cancels queued jobs immediately and requests
 cancellation of an active Voicebox generation. During PDF or URL extraction,
 the worker stops at the next boundary after the extractor responds.
-`DELETE /api/jobs/{id}` removes a completed, failed, or cancelled job and its
-intermediate WAV, MP3, and Defuddle files. It keeps the published podcast folder
-under `/mnt/media/podcast/podcasts/`.
+`DELETE /api/jobs/{id}/temp-files` removes a completed, failed, or cancelled
+job's intermediate WAV, MP3, source, and Defuddle files while keeping its record.
+`DELETE /api/jobs/{id}` removes the job record and those same intermediate files.
+Both actions keep the published podcast folder under `/mnt/media/podcast/podcasts/`
+and retain the saved job log.
 Each job card shows its ID and links to its saved event log. Logs are kept under
 the persistent workflow state and remain available at `/api/jobs/{id}/logs`
 after generated files or the job record are deleted.

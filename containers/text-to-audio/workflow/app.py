@@ -549,6 +549,19 @@ def cancel_job(job_id: str):
     return {"id": job_id, "status": "cancelling"}
 
 
+@app.delete("/api/jobs/{job_id}/temp-files")
+def delete_job_temp_files(job_id: str):
+    with connect_db() as db:
+        row = db.execute("SELECT status FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Job not found")
+        if row["status"] not in DELETABLE:
+            raise HTTPException(409, "Wait for the job to finish or cancel before deleting temporary files")
+    cleanup_job_files(job_id)
+    log_job_event(job_id, "temporary files deleted; job record, published podcast, and log kept")
+    return {"id": job_id, "temporary_files_deleted": True}
+
+
 @app.delete("/api/jobs/{job_id}")
 def delete_job(job_id: str):
     with connect_db() as db:
