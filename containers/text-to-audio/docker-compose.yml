@@ -142,7 +142,7 @@ services:
 
     environment:
       STATE_DIR: /state
-      OUTPUT_DIR: /mnt/media/audiobooks
+      OUTPUT_DIR: /mnt/media/podcast/podcasts
       GENERATIONS_DIR: /mnt/media/podcast/manual
       VOICEBOX_URL: http://voicebox:17493
       DEFUDDLE_URL: http://defuddle:8080
@@ -152,8 +152,8 @@ services:
     volumes:
       - ${CONTAINERS_DATA}/workflow-data:/state
       - type: bind
-        source: /mnt/media/audiobooks
-        target: /mnt/media/audiobooks
+        source: /mnt/media/podcast/podcasts
+        target: /mnt/media/podcast/podcasts
         bind:
           create_host_path: false
       - type: bind

@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse
 STATE_DIR = Path(os.getenv("STATE_DIR", "/state"))
 JOB_DIR = STATE_DIR / "jobs"
 DB_PATH = STATE_DIR / "jobs.sqlite3"
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/mnt/media/audiobooks"))
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/mnt/media/podcast/podcasts"))
 GENERATIONS_DIR = Path(os.getenv("GENERATIONS_DIR", "/mnt/media/podcast/manual"))
 VOICEBOX_URL = os.getenv("VOICEBOX_URL", "http://voicebox:17493").rstrip("/")
 DEFUDDLE_URL = os.getenv("DEFUDDLE_URL", "http://defuddle:8080").rstrip("/")

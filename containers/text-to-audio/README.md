@@ -86,9 +86,9 @@ PDF and EPUB files are converted to Markdown by Docling. URLs are cleaned by
 Defuddle. The worker splits Markdown at chapter headings, asks Voicebox for
 each track, then waits for the WAV to MP3 sidecar to finish. Numbered MP3 tracks
 and a small `metadata.json` are written to
-`/mnt/media/audiobooks/<book title>/` on the shared media mount. Audiobookshelf
-uses that same path read-only at `/audiobooks`, so the output becomes available
-in its library after its next scan.
+`/mnt/media/podcast/podcasts/<book title>/` on the shared media mount.
+Audiobookshelf mounts that directory read-only at `/podcasts`, so the output
+becomes available in its podcast library after its next scan.
 
 The worker API is also available at `/api/jobs` (multipart form fields:
 `profile_id`, `language`, and exactly one of `file`, `url`, or `text`; optional
@@ -98,7 +98,7 @@ job. Voice profiles are proxied from Voicebox at `GET /api/profiles`.
 cancellation of an active Voicebox generation. During PDF or URL extraction,
 the worker stops at the next boundary after the extractor responds.
 `DELETE /api/jobs/{id}` removes a completed, failed, or cancelled job, its
-Audiobookshelf output folder, and generated WAV, MP3, and Defuddle files.
+podcast output folder, and generated WAV, MP3, and Defuddle files.
 
 ## Shared media mount
 
