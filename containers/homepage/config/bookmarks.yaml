@@ -43,18 +43,23 @@
         - icon: mdi-file-convert
           href: http://192.168.1.130:3001/
 
-- Media:
-    - Text to Audio:
+- text-to-audio:
+    - Workflow:
         - icon: mdi-book-music
           href: http://192.168.1.32:17603/
-
-    - Voicebox:
-        - icon: mdi-account-voice
-          href: http://192.168.1.32:17600/
 
     - Docling:
         - icon: mdi-file-document-outline
           href: http://192.168.1.32:17602/ui
+
+    - Defuddle:
+        - icon: mdi-text-box-check-outline
+          href: http://192.168.1.32:17601/
+
+- Media:
+    - Voicebox:
+        - icon: mdi-account-voice
+          href: http://192.168.1.32:17600/
 
     - BookOrbit:
         - icon: mdi-book-open-page-variant
