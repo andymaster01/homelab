@@ -20,6 +20,7 @@
     .job-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .25rem 1rem; }
     .job-times p { margin: .5rem 0; }
     .job-id { overflow-wrap: anywhere; }
+    .job-id button { width: auto; margin: 0; padding: .15rem .5rem; font-size: .85em; }
     .status { display: flex; justify-content: space-between; gap: 1rem; }
     .actions { display: flex; justify-content: flex-end; gap: .5rem; }
     .actions button { width: auto; margin-top: .5rem; }
@@ -68,6 +69,14 @@
       const hours = Math.floor(total / 3600), minutes = Math.floor((total % 3600) / 60), secs = total % 60;
       return hours ? `${hours}h ${minutes}m ${secs}s` : minutes ? `${minutes}m ${secs}s` : `${secs}s`;
     }
+    async function copyText(value) {
+      if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(value);
+      const input = document.createElement('textarea');
+      input.value = value; input.style.position = 'fixed'; input.style.opacity = '0';
+      document.body.append(input); input.select();
+      const copied = document.execCommand('copy'); input.remove();
+      if (!copied) throw new Error('Clipboard copy is not available in this browser');
+    }
     async function refreshJobs() {
       const response = await fetch('/api/jobs');
       const jobs = await response.json();
@@ -78,10 +87,19 @@
         const actions = active ? `<div class="actions"><button type="button" data-action="cancel" data-job-id="${escapeHtml(job.id)}">Cancel</button></div>` : deletable ? `<div class="actions"><button type="button" data-action="delete" data-job-id="${escapeHtml(job.id)}">Delete job and files</button></div>` : '';
         const elapsed = active ? Math.floor((Date.now() - new Date(job.created_at).getTime()) / 1000) : job.duration_seconds;
         const finishedAt = active ? '—' : formatDate(job.completed_at || job.updated_at);
-        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><p class="job-id">Job ID: <code>${escapeHtml(job.id)}</code> · <a href="/api/jobs/${encodeURIComponent(job.id)}/logs" target="_blank" rel="noopener">View logs</a></p><div class="job-times"><p>Created: <strong>${escapeHtml(formatDate(job.created_at))}</strong></p><p>Finished: <strong>${escapeHtml(finishedAt)}</strong></p><p>Time taken: <strong>${escapeHtml(formatDuration(elapsed))}</strong></p></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
+        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><p class="job-id">Job ID: <code>${escapeHtml(job.id)}</code> <button type="button" data-copy-job-id="${escapeHtml(job.id)}">Copy ID</button> · <a href="/api/jobs/${encodeURIComponent(job.id)}/logs" target="_blank" rel="noopener">View logs</a></p><div class="job-times"><p>Created: <strong>${escapeHtml(formatDate(job.created_at))}</strong></p><p>Finished: <strong>${escapeHtml(finishedAt)}</strong></p><p>Time taken: <strong>${escapeHtml(formatDuration(elapsed))}</strong></p></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
       }).join('') : 'No jobs yet.';
     }
     $('jobs').addEventListener('click', async event => {
+      const copyButton = event.target.closest('button[data-copy-job-id]');
+      if (copyButton) {
+        try {
+          await copyText(copyButton.dataset.copyJobId);
+          copyButton.textContent = 'Copied';
+          setTimeout(() => { if (copyButton.isConnected) copyButton.textContent = 'Copy ID'; }, 1200);
+        } catch (error) { alert(error.message); }
+        return;
+      }
       const button = event.target.closest('button[data-action]');
       if (!button) return;
       const action = button.dataset.action;
