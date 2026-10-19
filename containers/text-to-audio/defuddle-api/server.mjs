@@ -54,13 +54,14 @@ async function validateUrl(value) {
     throw new Error("local hostnames are not supported");
   }
   if (isIP(hostname)) {
+    if (isIP(hostname) === 6) throw new Error("IPv6 addresses are not supported; use an IPv4 address or hostname");
     if (isPrivateAddress(hostname)) throw new Error("private network addresses are not supported");
   } else {
     let addresses;
     try {
-      addresses = await lookup(hostname, { all: true, verbatim: true });
+      addresses = await lookup(hostname, { all: true, family: 4, verbatim: true });
     } catch {
-      throw new Error("hostname could not be resolved");
+      throw new Error("hostname could not be resolved to an IPv4 address");
     }
     if (!addresses.length || addresses.some(({ address }) => isPrivateAddress(address))) {
       throw new Error("URLs resolving to private network addresses are not supported");
@@ -93,6 +94,10 @@ function runDefuddle(url, tempPath) {
     const child = spawn("./node_modules/.bin/defuddle", ["parse", url.href, "--md", "--frontmatter", "--output", tempPath], {
       cwd: "/app",
       stdio: ["ignore", "ignore", "pipe"],
+      env: {
+        ...process.env,
+        NODE_OPTIONS: [process.env.NODE_OPTIONS, "--require=/app/ipv4-dns.cjs"].filter(Boolean).join(" "),
+      },
     });
     let stderr = "";
     let settled = false;

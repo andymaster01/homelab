@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY server.mjs ./
+COPY server.mjs ipv4-dns.cjs ./
 ENV PORT=8080
 EXPOSE 8080
 USER node

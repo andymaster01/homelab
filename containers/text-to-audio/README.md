@@ -83,7 +83,7 @@ narration language, then submit the job. Jobs run sequentially so they do not
 compete for Voicebox's CPU and memory. The page shows progress and failures.
 
 PDF and EPUB files are converted to Markdown by Docling. URLs are cleaned by
-Defuddle. The worker splits Markdown at chapter headings, asks Voicebox for
+Defuddle, which resolves and fetches URLs over IPv4. The worker splits Markdown at chapter headings, asks Voicebox for
 each track, then waits for the WAV to MP3 sidecar to finish. Numbered MP3 tracks
 and a small `metadata.json` are written to
 `/mnt/media/podcast/podcasts/<book title>/` on the shared media mount.
