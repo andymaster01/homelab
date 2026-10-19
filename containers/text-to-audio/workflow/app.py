@@ -338,7 +338,7 @@ async def create_job(
     timestamp = now()
     with connect_db() as db:
         db.execute("INSERT INTO jobs (id,title,source,status,step,progress,message,profile_id,language,input_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                   (safe_name(title) if title.strip() else "", source, "queued", "queued", 0,
+                   (job_id, safe_name(title) if title.strip() else "", source, "queued", "queued", 0,
                     "Waiting for the worker", profile_id.strip(), language, str(input_path) if input_path else None,
                     timestamp, timestamp))
         # Persist URL or pasted source in a separate per-job JSON file.

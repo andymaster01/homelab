@@ -70,7 +70,9 @@
       if (source.value === 'text') data.set('text', $('text').value);
       try {
         const response = await fetch('/api/jobs', {method:'POST', body:data});
-        const result = await response.json(); if (!response.ok) throw new Error(result.detail || 'Could not queue job');
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json') ? await response.json() : {detail: await response.text()};
+        if (!response.ok) throw new Error(result.detail || 'Could not queue job');
         event.target.reset(); source.dispatchEvent(new Event('change')); await refreshJobs();
       } catch (error) { $('form-error').textContent = error.message; }
       finally { $('submit').disabled = false; }
