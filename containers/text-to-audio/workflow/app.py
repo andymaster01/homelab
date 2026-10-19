@@ -221,7 +221,12 @@ def defuddle_extract(url, job_folder):
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RuntimeError("Enter a valid http or https URL")
     response = requests.post(f"{DEFUDDLE_URL}/extract", json={"url": url}, timeout=(15, 180))
-    response.raise_for_status()
+    if not response.ok:
+        try:
+            detail = response.json().get("error")
+        except (ValueError, AttributeError):
+            detail = None
+        raise RuntimeError(detail or f"Defuddle returned HTTP {response.status_code}")
     result = response.json()
     filename = result.get("filename")
     if filename and Path(filename).name == filename and filename.endswith(".md"):
