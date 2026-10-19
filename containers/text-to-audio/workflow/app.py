@@ -339,7 +339,16 @@ def process_job(job):
     check_cancelled(job_id)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     target = unique_destination(title)
-    work_output.rename(target)
+    staging_target = OUTPUT_DIR / f".text-to-audio-{job_id}.tmp"
+    shutil.rmtree(staging_target, ignore_errors=True)
+    try:
+        shutil.copytree(work_output, staging_target)
+        check_cancelled(job_id)
+        staging_target.rename(target)
+    except Exception:
+        shutil.rmtree(staging_target, ignore_errors=True)
+        raise
+    shutil.rmtree(work_output)
     update_job(job_id, status="completed", step="completed", progress=100,
                message=f"Audiobook saved to {target}", result_path=str(target))
 
