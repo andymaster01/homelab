@@ -44,6 +44,10 @@
           href: http://192.168.1.130:3001/
 
 - Media:
+    - Text to Audio:
+        - icon: mdi-book-music
+          href: http://192.168.1.32:17603/
+
     - Voicebox:
         - icon: mdi-account-voice
           href: http://192.168.1.32:17600/
