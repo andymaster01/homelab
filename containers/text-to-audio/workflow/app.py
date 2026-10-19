@@ -13,11 +13,12 @@ from urllib.parse import urlparse
 
 import requests
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 
 
 STATE_DIR = Path(os.getenv("STATE_DIR", "/state"))
 JOB_DIR = STATE_DIR / "jobs"
+LOG_DIR = STATE_DIR / "logs"
 DB_PATH = STATE_DIR / "jobs.sqlite3"
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/mnt/media/podcast/podcasts"))
 GENERATIONS_DIR = Path(os.getenv("GENERATIONS_DIR", "/mnt/media/podcast/manual"))
@@ -35,6 +36,8 @@ class JobCancelled(Exception):
 
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 JOB_DIR.mkdir(parents=True, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_LOCK = threading.Lock()
 
 
 def connect_db():
@@ -67,6 +70,17 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def log_job_event(job_id, event, **details):
+    record = {"timestamp": now(), "job_id": job_id, "event": event}
+    for key, value in details.items():
+        if value is not None:
+            if isinstance(value, str):
+                value = re.sub(r"(https?://[^/\s?#]+)[^\s]*", r"\1", value)
+            record[key] = value
+    with LOG_LOCK, (LOG_DIR / f"{job_id}.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
 def update_job(job_id, **values):
     values["updated_at"] = now()
     if values.get("status") == "completed":
@@ -74,6 +88,9 @@ def update_job(job_id, **values):
     fields = ", ".join(f"{key}=?" for key in values)
     with connect_db() as db:
         db.execute(f"UPDATE jobs SET {fields} WHERE id=?", (*values.values(), job_id))
+    tracked = {key: values[key] for key in ("status", "step", "progress", "message", "error") if key in values}
+    if tracked:
+        log_job_event(job_id, "job updated", **tracked)
 
 
 def read_job(row):
@@ -384,6 +401,7 @@ def worker_loop():
         if not job:
             time.sleep(2)
             continue
+        log_job_event(job["id"], "worker started", status=job["status"], step=job["step"])
         request_file = JOB_DIR / job["id"] / "request.json"
         if request_file.exists():
             job["source_value"] = json.loads(request_file.read_text(encoding="utf-8")).get("source_value", "")
@@ -467,6 +485,9 @@ async def create_job(
                    (job_id, safe_name(title) if title.strip() else "", source, "queued", "queued", 0,
                     "Waiting for the worker", profile_id.strip(), language, str(input_path) if input_path else None,
                     timestamp, timestamp))
+    url_host = urlparse(source_value).hostname if source == "url" else None
+    log_job_event(job_id, "job created", title=safe_name(title) if title.strip() else "", source=source,
+                  url_host=url_host, status="queued")
     return {"id": job_id, "status": "queued"}
 
 
@@ -490,6 +511,22 @@ def get_job(job_id: str):
     return data
 
 
+@app.get("/api/jobs/{job_id}/logs", response_class=PlainTextResponse)
+def get_job_logs(job_id: str):
+    try:
+        job_id = str(uuid.UUID(job_id))
+    except ValueError:
+        raise HTTPException(400, "Invalid job ID")
+    log_path = LOG_DIR / f"{job_id}.jsonl"
+    if log_path.is_file():
+        return PlainTextResponse(log_path.read_text(encoding="utf-8"))
+    with connect_db() as db:
+        exists = db.execute("SELECT 1 FROM jobs WHERE id=?", (job_id,)).fetchone()
+    if not exists:
+        raise HTTPException(404, "No saved logs for this job ID")
+    return PlainTextResponse("Detailed logs were not available when this job was processed.\n")
+
+
 @app.post("/api/jobs/{job_id}/cancel")
 def cancel_job(job_id: str):
     with connect_db() as db:
@@ -503,6 +540,7 @@ def cancel_job(job_id: str):
             result = db.execute("UPDATE jobs SET status='cancelled',step='cancelled',message='Cancelled by user',updated_at=? WHERE id=? AND status='queued'",
                                 (now(), job_id))
             if result.rowcount:
+                log_job_event(job_id, "job cancelled", status="cancelled", reason="Cancelled by user")
                 return {"id": job_id, "status": "cancelled"}
             row = db.execute("SELECT status, active_generation_id FROM jobs WHERE id=?", (job_id,)).fetchone()
             if not row:
@@ -512,6 +550,7 @@ def cancel_job(job_id: str):
                 raise HTTPException(409, f"Job is already {status}")
         db.execute("UPDATE jobs SET status='cancelling',step='cancelling',message='Stopping current work…',updated_at=? WHERE id=?",
                    (now(), job_id))
+    log_job_event(job_id, "cancellation requested", status="cancelling")
     if generation_id:
         cancel_voicebox_generation(generation_id)
     return {"id": job_id, "status": "cancelling"}
@@ -526,6 +565,7 @@ def delete_job(job_id: str):
         if row["status"] not in DELETABLE:
             raise HTTPException(409, "Cancel the job and wait for it to stop before deleting it")
         status, result_path = row["status"], row["result_path"]
+    log_job_event(job_id, "job and generated files deleted", previous_status=status)
     cleanup_job_files(job_id, result_path)
     with connect_db() as db:
         db.execute("DELETE FROM jobs WHERE id=? AND status=?", (job_id, status))

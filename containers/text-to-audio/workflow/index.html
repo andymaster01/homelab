@@ -19,6 +19,7 @@
     .job h3 { margin: 0; }
     .job-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .25rem 1rem; }
     .job-times p { margin: .5rem 0; }
+    .job-id { overflow-wrap: anywhere; }
     .status { display: flex; justify-content: space-between; gap: 1rem; }
     .actions { display: flex; justify-content: flex-end; gap: .5rem; }
     .actions button { width: auto; margin-top: .5rem; }
@@ -77,7 +78,7 @@
         const actions = active ? `<div class="actions"><button type="button" data-action="cancel" data-job-id="${escapeHtml(job.id)}">Cancel</button></div>` : deletable ? `<div class="actions"><button type="button" data-action="delete" data-job-id="${escapeHtml(job.id)}">Delete job and files</button></div>` : '';
         const elapsed = active ? Math.floor((Date.now() - new Date(job.created_at).getTime()) / 1000) : job.duration_seconds;
         const finishedAt = active ? '—' : formatDate(job.completed_at || job.updated_at);
-        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><div class="job-times"><p>Created: <strong>${escapeHtml(formatDate(job.created_at))}</strong></p><p>Finished: <strong>${escapeHtml(finishedAt)}</strong></p><p>Time taken: <strong>${escapeHtml(formatDuration(elapsed))}</strong></p></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
+        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><p class="job-id">Job ID: <code>${escapeHtml(job.id)}</code> · <a href="/api/jobs/${encodeURIComponent(job.id)}/logs" target="_blank" rel="noopener">View logs</a></p><div class="job-times"><p>Created: <strong>${escapeHtml(formatDate(job.created_at))}</strong></p><p>Finished: <strong>${escapeHtml(finishedAt)}</strong></p><p>Time taken: <strong>${escapeHtml(formatDuration(elapsed))}</strong></p></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
       }).join('') : 'No jobs yet.';
     }
     $('jobs').addEventListener('click', async event => {

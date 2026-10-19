@@ -99,6 +99,9 @@ cancellation of an active Voicebox generation. During PDF or URL extraction,
 the worker stops at the next boundary after the extractor responds.
 `DELETE /api/jobs/{id}` removes a completed, failed, or cancelled job, its
 podcast output folder, and generated WAV, MP3, and Defuddle files.
+Each job card shows its ID and links to its saved event log. Logs are kept under
+the persistent workflow state and remain available at `/api/jobs/{id}/logs`
+after generated files or the job record are deleted.
 
 ## Shared media mount
 
