@@ -134,7 +134,7 @@ def record_artifact(job_id, key, value):
     path.write_text(json.dumps(artifacts, indent=2), encoding="utf-8")
 
 
-def cleanup_job_files(job_id, result_path=None):
+def cleanup_job_files(job_id):
     folder = (JOB_DIR / job_id).resolve()
     root = JOB_DIR.resolve()
     if folder != root and folder.is_relative_to(root):
@@ -152,13 +152,6 @@ def cleanup_job_files(job_id, result_path=None):
                 if Path(filename).name == filename and filename.endswith(".md"):
                     (GENERATIONS_DIR / filename).unlink(missing_ok=True)
         shutil.rmtree(folder, ignore_errors=True)
-
-    if result_path:
-        output_root = OUTPUT_DIR.resolve()
-        target = Path(result_path).resolve()
-        if target != output_root and target.is_relative_to(output_root):
-            shutil.rmtree(target, ignore_errors=True)
-
 
 def safe_name(value, fallback="Audiobook"):
     value = unicodedata.normalize("NFKD", value or "")
@@ -559,14 +552,14 @@ def cancel_job(job_id: str):
 @app.delete("/api/jobs/{job_id}")
 def delete_job(job_id: str):
     with connect_db() as db:
-        row = db.execute("SELECT status, result_path FROM jobs WHERE id=?", (job_id,)).fetchone()
+        row = db.execute("SELECT status FROM jobs WHERE id=?", (job_id,)).fetchone()
         if not row:
             raise HTTPException(404, "Job not found")
         if row["status"] not in DELETABLE:
             raise HTTPException(409, "Cancel the job and wait for it to stop before deleting it")
-        status, result_path = row["status"], row["result_path"]
-    log_job_event(job_id, "job and generated files deleted", previous_status=status)
-    cleanup_job_files(job_id, result_path)
+        status = row["status"]
+    log_job_event(job_id, "job and intermediate files deleted; published podcast kept", previous_status=status)
+    cleanup_job_files(job_id)
     with connect_db() as db:
         db.execute("DELETE FROM jobs WHERE id=? AND status=?", (job_id, status))
     return {"id": job_id, "deleted": True}
