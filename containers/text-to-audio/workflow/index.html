@@ -17,6 +17,8 @@
     progress { width: 100%; height: 1rem; }
     .error { color: #d44; white-space: pre-wrap; }
     .job h3 { margin: 0; }
+    .job-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .25rem 1rem; }
+    .job-times p { margin: .5rem 0; }
     .status { display: flex; justify-content: space-between; gap: 1rem; }
     .actions { display: flex; justify-content: flex-end; gap: .5rem; }
     .actions button { width: auto; margin-top: .5rem; }
@@ -58,6 +60,13 @@
       });
     }
     function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function formatDate(value) { return value ? new Intl.DateTimeFormat(undefined, {dateStyle:'medium', timeStyle:'short'}).format(new Date(value)) : '—'; }
+    function formatDuration(seconds) {
+      if (seconds == null) return '—';
+      const total = Math.max(0, Number(seconds));
+      const hours = Math.floor(total / 3600), minutes = Math.floor((total % 3600) / 60), secs = total % 60;
+      return hours ? `${hours}h ${minutes}m ${secs}s` : minutes ? `${minutes}m ${secs}s` : `${secs}s`;
+    }
     async function refreshJobs() {
       const response = await fetch('/api/jobs');
       const jobs = await response.json();
@@ -66,7 +75,9 @@
         const active = ['queued', 'processing'].includes(job.status);
         const deletable = ['completed', 'failed', 'cancelled'].includes(job.status);
         const actions = active ? `<div class="actions"><button type="button" data-action="cancel" data-job-id="${escapeHtml(job.id)}">Cancel</button></div>` : deletable ? `<div class="actions"><button type="button" data-action="delete" data-job-id="${escapeHtml(job.id)}">Delete job and files</button></div>` : '';
-        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
+        const elapsed = active ? Math.floor((Date.now() - new Date(job.created_at).getTime()) / 1000) : job.duration_seconds;
+        const completedAt = job.status === 'completed' ? formatDate(job.completed_at) : '—';
+        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><div class="job-times"><p>Created: <strong>${escapeHtml(formatDate(job.created_at))}</strong></p><p>Completed: <strong>${escapeHtml(completedAt)}</strong></p><p>Time taken: <strong>${escapeHtml(formatDuration(elapsed))}</strong></p></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
       }).join('') : 'No jobs yet.';
     }
     $('jobs').addEventListener('click', async event => {

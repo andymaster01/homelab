@@ -50,11 +50,13 @@ def initialize_db():
             status TEXT NOT NULL, step TEXT NOT NULL, progress INTEGER NOT NULL,
             message TEXT NOT NULL, profile_id TEXT NOT NULL, language TEXT NOT NULL,
             input_path TEXT, result_path TEXT, error TEXT, created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL, active_generation_id TEXT
+            updated_at TEXT NOT NULL, active_generation_id TEXT, completed_at TEXT
         )""")
         columns = {row[1] for row in db.execute("PRAGMA table_info(jobs)")}
         if "active_generation_id" not in columns:
             db.execute("ALTER TABLE jobs ADD COLUMN active_generation_id TEXT")
+        if "completed_at" not in columns:
+            db.execute("ALTER TABLE jobs ADD COLUMN completed_at TEXT")
         db.execute("UPDATE jobs SET status='queued', step='queued', message='Requeued after worker restart', active_generation_id=NULL, updated_at=? WHERE status='processing'",
                    (now(),))
         db.execute("UPDATE jobs SET status='cancelled', step='cancelled', message='Cancelled during worker restart', active_generation_id=NULL, updated_at=? WHERE status='cancelling'",
@@ -67,6 +69,8 @@ def now():
 
 def update_job(job_id, **values):
     values["updated_at"] = now()
+    if values.get("status") == "completed":
+        values["completed_at"] = values["updated_at"]
     fields = ", ".join(f"{key}=?" for key in values)
     with connect_db() as db:
         db.execute(f"UPDATE jobs SET {fields} WHERE id=?", (*values.values(), job_id))
@@ -76,6 +80,14 @@ def read_job(row):
     data = dict(row)
     data.pop("input_path", None)
     data.pop("active_generation_id", None)
+    if data["status"] == "completed" and not data.get("completed_at"):
+        data["completed_at"] = data["updated_at"]
+    ended_at = data.get("completed_at") or (data["updated_at"] if data["status"] in TERMINAL else now())
+    try:
+        elapsed = datetime.fromisoformat(ended_at) - datetime.fromisoformat(data["created_at"])
+        data["duration_seconds"] = max(0, int(elapsed.total_seconds()))
+    except (TypeError, ValueError):
+        data["duration_seconds"] = None
     return data
 
 
