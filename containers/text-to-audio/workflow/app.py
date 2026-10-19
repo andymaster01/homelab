@@ -336,13 +336,13 @@ async def create_job(
             raise HTTPException(413, "Pasted text is too large")
 
     timestamp = now()
+    # Persist URL or pasted source before making the job visible to the worker.
+    (job_folder / "request.json").write_text(json.dumps({"source_value": source_value}), encoding="utf-8")
     with connect_db() as db:
         db.execute("INSERT INTO jobs (id,title,source,status,step,progress,message,profile_id,language,input_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                    (job_id, safe_name(title) if title.strip() else "", source, "queued", "queued", 0,
                     "Waiting for the worker", profile_id.strip(), language, str(input_path) if input_path else None,
                     timestamp, timestamp))
-        # Persist URL or pasted source in a separate per-job JSON file.
-    (job_folder / "request.json").write_text(json.dumps({"source_value": source_value}), encoding="utf-8")
     return {"id": job_id, "status": "queued"}
 
 
