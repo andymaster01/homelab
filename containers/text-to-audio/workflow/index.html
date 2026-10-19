@@ -18,6 +18,8 @@
     .error { color: #d44; white-space: pre-wrap; }
     .job h3 { margin: 0; }
     .status { display: flex; justify-content: space-between; gap: 1rem; }
+    .actions { display: flex; justify-content: flex-end; gap: .5rem; }
+    .actions button { width: auto; margin-top: .5rem; }
   </style>
 </head>
 <body>
@@ -60,8 +62,29 @@
       const response = await fetch('/api/jobs');
       const jobs = await response.json();
       $('jobs').classList.toggle('muted', jobs.length === 0);
-      $('jobs').innerHTML = jobs.length ? jobs.map(job => `<section class="job"><div class="status"><h3>${escapeHtml(job.title)}</h3><span>${escapeHtml(job.status)}</span></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}</section>`).join('') : 'No jobs yet.';
+      $('jobs').innerHTML = jobs.length ? jobs.map(job => {
+        const active = ['queued', 'processing'].includes(job.status);
+        const deletable = ['completed', 'failed', 'cancelled'].includes(job.status);
+        const actions = active ? `<div class="actions"><button type="button" data-action="cancel" data-job-id="${escapeHtml(job.id)}">Cancel</button></div>` : deletable ? `<div class="actions"><button type="button" data-action="delete" data-job-id="${escapeHtml(job.id)}">Delete job and files</button></div>` : '';
+        return `<section class="job"><div class="status"><h3>${escapeHtml(job.title || 'Untitled')}</h3><span>${escapeHtml(job.status)}</span></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}${actions}</section>`;
+      }).join('') : 'No jobs yet.';
     }
+    $('jobs').addEventListener('click', async event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const action = button.dataset.action;
+      if (action === 'delete' && !confirm('Delete this job and its generated files?')) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/jobs/${encodeURIComponent(button.dataset.jobId)}${action === 'cancel' ? '/cancel' : ''}`, {method: action === 'cancel' ? 'POST' : 'DELETE'});
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.detail || `Could not ${action} job`);
+        await refreshJobs();
+      } catch (error) {
+        alert(error.message);
+        await refreshJobs();
+      }
+    });
     $('job-form').addEventListener('submit', async event => {
       event.preventDefault(); $('form-error').textContent = ''; $('submit').disabled = true;
       const data = new FormData(); data.set('profile_id', $('profile').value); data.set('language', $('language').value); data.set('title', $('title').value);

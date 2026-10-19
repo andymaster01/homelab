@@ -94,6 +94,11 @@ The worker API is also available at `/api/jobs` (multipart form fields:
 `profile_id`, `language`, and exactly one of `file`, `url`, or `text`; optional
 `title`). `GET /api/jobs` lists recent jobs and `GET /api/jobs/{id}` returns one
 job. Voice profiles are proxied from Voicebox at `GET /api/profiles`.
+`POST /api/jobs/{id}/cancel` cancels queued jobs immediately and requests
+cancellation of an active Voicebox generation. During PDF or URL extraction,
+the worker stops at the next boundary after the extractor responds.
+`DELETE /api/jobs/{id}` removes a completed, failed, or cancelled job, its
+Audiobookshelf output folder, and generated WAV, MP3, and Defuddle files.
 
 ## Shared media mount
 

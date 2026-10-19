@@ -26,7 +26,12 @@ DEFUDDLE_URL = os.getenv("DEFUDDLE_URL", "http://defuddle:8080").rstrip("/")
 DOCLING_URL = os.getenv("DOCLING_URL", "http://docling:5001").rstrip("/")
 MP3_WAIT_SECONDS = int(os.getenv("MP3_WAIT_SECONDS", "43200"))
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024
-TERMINAL = {"completed", "failed"}
+TERMINAL = {"completed", "failed", "cancelled"}
+DELETABLE = {"completed", "failed", "cancelled"}
+
+
+class JobCancelled(Exception):
+    pass
 
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 JOB_DIR.mkdir(parents=True, exist_ok=True)
@@ -45,9 +50,14 @@ def initialize_db():
             status TEXT NOT NULL, step TEXT NOT NULL, progress INTEGER NOT NULL,
             message TEXT NOT NULL, profile_id TEXT NOT NULL, language TEXT NOT NULL,
             input_path TEXT, result_path TEXT, error TEXT, created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+            updated_at TEXT NOT NULL, active_generation_id TEXT
         )""")
-        db.execute("UPDATE jobs SET status='queued', step='queued', message='Requeued after worker restart', updated_at=? WHERE status='processing'",
+        columns = {row[1] for row in db.execute("PRAGMA table_info(jobs)")}
+        if "active_generation_id" not in columns:
+            db.execute("ALTER TABLE jobs ADD COLUMN active_generation_id TEXT")
+        db.execute("UPDATE jobs SET status='queued', step='queued', message='Requeued after worker restart', active_generation_id=NULL, updated_at=? WHERE status='processing'",
+                   (now(),))
+        db.execute("UPDATE jobs SET status='cancelled', step='cancelled', message='Cancelled during worker restart', active_generation_id=NULL, updated_at=? WHERE status='cancelling'",
                    (now(),))
 
 
@@ -65,7 +75,60 @@ def update_job(job_id, **values):
 def read_job(row):
     data = dict(row)
     data.pop("input_path", None)
+    data.pop("active_generation_id", None)
     return data
+
+
+def job_status(job_id):
+    with connect_db() as db:
+        row = db.execute("SELECT status, active_generation_id FROM jobs WHERE id=?", (job_id,)).fetchone()
+    if not row:
+        raise JobCancelled("Job was removed")
+    return row["status"], row["active_generation_id"]
+
+
+def check_cancelled(job_id):
+    status, _ = job_status(job_id)
+    if status in {"cancelling", "cancelled"}:
+        raise JobCancelled("Job cancelled")
+
+
+def artifacts_file(job_id):
+    return JOB_DIR / job_id / "artifacts.json"
+
+
+def record_artifact(job_id, key, value):
+    path = artifacts_file(job_id)
+    artifacts = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"generation_ids": [], "manual_files": []}
+    if value not in artifacts.setdefault(key, []):
+        artifacts[key].append(value)
+    path.write_text(json.dumps(artifacts, indent=2), encoding="utf-8")
+
+
+def cleanup_job_files(job_id, result_path=None):
+    folder = (JOB_DIR / job_id).resolve()
+    root = JOB_DIR.resolve()
+    if folder != root and folder.is_relative_to(root):
+        artifact_path = folder / "artifacts.json"
+        if artifact_path.exists():
+            artifacts = json.loads(artifact_path.read_text(encoding="utf-8"))
+            for generation_id in artifacts.get("generation_ids", []):
+                try:
+                    safe_id = str(uuid.UUID(generation_id))
+                except (ValueError, TypeError):
+                    continue
+                for extension in ("wav", "mp3"):
+                    (GENERATIONS_DIR / f"{safe_id}.{extension}").unlink(missing_ok=True)
+            for filename in artifacts.get("manual_files", []):
+                if Path(filename).name == filename and filename.endswith(".md"):
+                    (GENERATIONS_DIR / filename).unlink(missing_ok=True)
+        shutil.rmtree(folder, ignore_errors=True)
+
+    if result_path:
+        output_root = OUTPUT_DIR.resolve()
+        target = Path(result_path).resolve()
+        if target != output_root and target.is_relative_to(output_root):
+            shutil.rmtree(target, ignore_errors=True)
 
 
 def safe_name(value, fallback="Audiobook"):
@@ -149,6 +212,8 @@ def defuddle_extract(url, job_folder):
     response.raise_for_status()
     result = response.json()
     filename = result.get("filename")
+    if filename and Path(filename).name == filename and filename.endswith(".md"):
+        record_artifact(job_folder.name, "manual_files", filename)
     source_path = GENERATIONS_DIR / filename if filename else None
     if source_path and source_path.is_file():
         markdown = source_path.read_text(encoding="utf-8", errors="replace")
@@ -162,7 +227,7 @@ def defuddle_extract(url, job_folder):
     return markdown
 
 
-def wait_generation(generation_id):
+def wait_generation(job_id, generation_id):
     with requests.get(f"{VOICEBOX_URL}/generate/{generation_id}/status", stream=True,
                       headers={"Accept": "text/event-stream"}, timeout=(15, 1800)) as response:
         response.raise_for_status()
@@ -172,13 +237,23 @@ def wait_generation(generation_id):
             status = json.loads(line[5:].strip())
             state = status.get("status")
             if state == "completed":
+                check_cancelled(job_id)
                 return
             if state in {"failed", "not_found"}:
+                check_cancelled(job_id)
                 raise RuntimeError(status.get("error") or f"Voicebox generation {state}")
     raise RuntimeError("Voicebox status stream ended before completion")
 
 
-def generate_chapter(text, profile_id, language, timeout_at):
+def cancel_voicebox_generation(generation_id):
+    try:
+        requests.post(f"{VOICEBOX_URL}/generate/{generation_id}/cancel", timeout=(3, 8))
+    except requests.RequestException:
+        pass
+
+
+def generate_chapter(job_id, text, profile_id, language, timeout_at):
+    check_cancelled(job_id)
     response = requests.post(f"{VOICEBOX_URL}/generate", json={
         "profile_id": profile_id, "text": text, "language": language,
         "max_chunk_chars": 3000,
@@ -187,10 +262,17 @@ def generate_chapter(text, profile_id, language, timeout_at):
     generation_id = response.json().get("id")
     if not generation_id:
         raise RuntimeError("Voicebox did not return a generation ID")
-    wait_generation(generation_id)
+    record_artifact(job_id, "generation_ids", generation_id)
+    update_job(job_id, active_generation_id=generation_id)
+    if job_status(job_id)[0] in {"cancelling", "cancelled"}:
+        cancel_voicebox_generation(generation_id)
+        raise JobCancelled("Job cancelled")
+    wait_generation(job_id, generation_id)
+    update_job(job_id, active_generation_id=None)
     wav = GENERATIONS_DIR / f"{generation_id}.wav"
     mp3 = GENERATIONS_DIR / f"{generation_id}.mp3"
     while time.monotonic() < timeout_at:
+        check_cancelled(job_id)
         if mp3.is_file() and mp3.stat().st_size > 0:
             return mp3
         time.sleep(3)
@@ -209,11 +291,13 @@ def unique_destination(title):
 def process_job(job):
     job_id = job["id"]
     folder = JOB_DIR / job_id
-    update_job(job_id, status="processing", step="extracting", progress=5, message="Extracting clean text")
+    check_cancelled(job_id)
+    update_job(job_id, step="extracting", progress=5, message="Extracting clean text")
     source = job["source"]
     input_path = Path(job["input_path"]) if job["input_path"] else None
     if source == "url":
         markdown = defuddle_extract(job["source_value"], folder)
+        check_cancelled(job_id)
         default_title = urlparse(job["source_value"]).path.rstrip("/").split("/")[-1] or urlparse(job["source_value"]).hostname
         if default_title:
             default_title = re.sub(r"[-_]+", " ", default_title)
@@ -230,6 +314,7 @@ def process_job(job):
         default_title = "Pasted text"
 
     chapters = split_chapters(markdown)
+    check_cancelled(job_id)
     if not chapters:
         raise RuntimeError("No readable text was extracted")
     title = safe_name(job["title"] or default_title)
@@ -240,9 +325,10 @@ def process_job(job):
     work_output.mkdir(parents=True, exist_ok=True)
     deadline = time.monotonic() + MP3_WAIT_SECONDS
     for index, (chapter_title, chapter_text) in enumerate(chapters, start=1):
+        check_cancelled(job_id)
         update_job(job_id, step="synthesizing", progress=10 + int((index - 1) / len(chapters) * 80),
                    message=f"Generating track {index} of {len(chapters)}: {chapter_title}")
-        mp3 = generate_chapter(chapter_text, job["profile_id"], job["language"], deadline)
+        mp3 = generate_chapter(job_id, chapter_text, job["profile_id"], job["language"], deadline)
         chapter_name = safe_name(chapter_title, f"Track {index}")
         shutil.copy2(mp3, work_output / f"{index:03d} - {chapter_name}.mp3")
 
@@ -250,6 +336,7 @@ def process_job(job):
         "title": title, "source": source, "language": job["language"],
         "tracks": [{"number": index, "title": chapter[0]} for index, chapter in enumerate(chapters, 1)],
     }, ensure_ascii=False, indent=2), encoding="utf-8")
+    check_cancelled(job_id)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     target = unique_destination(title)
     work_output.rename(target)
@@ -262,7 +349,10 @@ def worker_loop():
         with connect_db() as db:
             row = db.execute("SELECT * FROM jobs WHERE status='queued' ORDER BY created_at LIMIT 1").fetchone()
             if row:
-                job = dict(row)
+                claimed = db.execute(
+                    "UPDATE jobs SET status='processing', step='starting', message='Starting job', updated_at=? WHERE id=? AND status='queued'",
+                    (now(), row["id"]))
+                job = dict(db.execute("SELECT * FROM jobs WHERE id=?", (row["id"],)).fetchone()) if claimed.rowcount else None
             else:
                 job = None
         if not job:
@@ -271,11 +361,19 @@ def worker_loop():
         request_file = JOB_DIR / job["id"] / "request.json"
         if request_file.exists():
             job["source_value"] = json.loads(request_file.read_text(encoding="utf-8")).get("source_value", "")
-        update_job(job["id"], status="processing", step="starting", message="Starting job")
         try:
             process_job(job)
+        except JobCancelled:
+            update_job(job["id"], status="cancelled", step="cancelled", active_generation_id=None,
+                       message="Cancelled by user", error=None)
         except Exception as error:
-            update_job(job["id"], status="failed", step="failed", error=str(error), message="Job failed")
+            status, _ = job_status(job["id"])
+            if status in {"cancelling", "cancelled"}:
+                update_job(job["id"], status="cancelled", step="cancelled", active_generation_id=None,
+                           message="Cancelled by user", error=None)
+            else:
+                update_job(job["id"], status="failed", step="failed", active_generation_id=None,
+                           error=str(error), message="Job failed")
 
 
 initialize_db()
@@ -364,3 +462,45 @@ def get_job(job_id: str):
     if request_file.exists():
         data["source_value"] = json.loads(request_file.read_text(encoding="utf-8")).get("source_value", "")
     return data
+
+
+@app.post("/api/jobs/{job_id}/cancel")
+def cancel_job(job_id: str):
+    with connect_db() as db:
+        row = db.execute("SELECT status, active_generation_id FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Job not found")
+        status, generation_id = row["status"], row["active_generation_id"]
+        if status in TERMINAL:
+            raise HTTPException(409, f"Job is already {status}")
+        if status == "queued":
+            result = db.execute("UPDATE jobs SET status='cancelled',step='cancelled',message='Cancelled by user',updated_at=? WHERE id=? AND status='queued'",
+                                (now(), job_id))
+            if result.rowcount:
+                return {"id": job_id, "status": "cancelled"}
+            row = db.execute("SELECT status, active_generation_id FROM jobs WHERE id=?", (job_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "Job not found")
+            status, generation_id = row["status"], row["active_generation_id"]
+            if status in TERMINAL:
+                raise HTTPException(409, f"Job is already {status}")
+        db.execute("UPDATE jobs SET status='cancelling',step='cancelling',message='Stopping current work…',updated_at=? WHERE id=?",
+                   (now(), job_id))
+    if generation_id:
+        cancel_voicebox_generation(generation_id)
+    return {"id": job_id, "status": "cancelling"}
+
+
+@app.delete("/api/jobs/{job_id}")
+def delete_job(job_id: str):
+    with connect_db() as db:
+        row = db.execute("SELECT status, result_path FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Job not found")
+        if row["status"] not in DELETABLE:
+            raise HTTPException(409, "Cancel the job and wait for it to stop before deleting it")
+        status, result_path = row["status"], row["result_path"]
+    cleanup_job_files(job_id, result_path)
+    with connect_db() as db:
+        db.execute("DELETE FROM jobs WHERE id=? AND status=?", (job_id, status))
+    return {"id": job_id, "deleted": True}
