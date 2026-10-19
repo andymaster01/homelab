@@ -129,3 +129,47 @@ services:
         limits:
           cpus: "1.0"
           memory: 512M
+
+  workflow:
+    image: text-to-audio-workflow:1.0.0
+    build:
+      context: ${CONTAINERS_DATA}/workflow
+    container_name: text-to-audio-workflow
+    restart: unless-stopped
+
+    ports:
+      - "192.168.1.32:17603:8080"
+
+    environment:
+      STATE_DIR: /state
+      OUTPUT_DIR: /mnt/media/audiobooks
+      GENERATIONS_DIR: /mnt/media/podcast/manual
+      VOICEBOX_URL: http://voicebox:17493
+      DEFUDDLE_URL: http://defuddle:8080
+      DOCLING_URL: http://docling:5001
+      MP3_WAIT_SECONDS: "43200"
+
+    volumes:
+      - ${CONTAINERS_DATA}/workflow-data:/state
+      - type: bind
+        source: /mnt/media/audiobooks
+        target: /mnt/media/audiobooks
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /mnt/media/podcast/manual
+        target: /mnt/media/podcast/manual
+        bind:
+          create_host_path: false
+
+    depends_on:
+      - voicebox
+      - mp3-converter
+      - docling
+      - defuddle
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G

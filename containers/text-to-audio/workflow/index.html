@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text to Audio</title>
+  <style>
+    :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+    body { max-width: 800px; margin: 3rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: .25rem; }
+    .muted { opacity: .7; }
+    form, .job { border: 1px solid #8886; border-radius: 12px; padding: 1.25rem; margin: 1.25rem 0; }
+    label { display: block; font-weight: 600; margin: .85rem 0 .3rem; }
+    input, select, textarea, button { box-sizing: border-box; width: 100%; padding: .7rem; font: inherit; border-radius: 7px; border: 1px solid #8888; }
+    textarea { min-height: 9rem; resize: vertical; }
+    button { margin-top: 1rem; cursor: pointer; font-weight: 700; }
+    progress { width: 100%; height: 1rem; }
+    .error { color: #d44; white-space: pre-wrap; }
+    .job h3 { margin: 0; }
+    .status { display: flex; justify-content: space-between; gap: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Text to Audio</h1>
+  <p class="muted">Upload a PDF, EPUB, or text file, paste text, or submit a web page. The worker creates one MP3 per chapter and adds the book to Audiobookshelf.</p>
+  <form id="job-form">
+    <label for="source">Source type</label>
+    <select id="source"><option value="file">PDF, EPUB, or TXT file</option><option value="url">Web page URL</option><option value="text">Pasted text</option></select>
+    <div id="file-field"><label for="file">File</label><input id="file" type="file" accept=".pdf,.epub,.txt"></div>
+    <div id="url-field" hidden><label for="url">URL</label><input id="url" type="url" placeholder="https://example.com/article"></div>
+    <div id="text-field" hidden><label for="text">Text</label><textarea id="text" placeholder="Paste the text to narrate"></textarea></div>
+    <label for="title">Book title (optional)</label><input id="title" maxlength="100" placeholder="Use the source title">
+    <label for="profile">Voice profile</label><select id="profile" required></select>
+    <label for="language">Narration language</label>
+    <select id="language"><option value="en">English</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="ja">Japanese</option><option value="zh">Chinese</option></select>
+    <button id="submit" type="submit">Create audiobook</button>
+    <p id="form-error" class="error"></p>
+  </form>
+  <h2>Recent jobs</h2><div id="jobs" class="muted">Loading…</div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const source = $('source');
+    source.addEventListener('change', () => {
+      for (const kind of ['file', 'url', 'text']) $(`${kind}-field`).hidden = source.value !== kind;
+    });
+    async function refreshProfiles() {
+      const response = await fetch('/api/profiles');
+      if (!response.ok) throw new Error('Could not load Voicebox profiles');
+      const profiles = await response.json();
+      $('profile').innerHTML = profiles.map(p => `<option value="${escapeHtml(p.id)}" data-language="${escapeHtml(p.language || 'en')}">${escapeHtml(p.name)} (${escapeHtml(p.language || 'en')})</option>`).join('');
+      const firstLanguage = profiles[0]?.language;
+      if (firstLanguage && [...$('language').options].some(option => option.value === firstLanguage)) $('language').value = firstLanguage;
+      $('profile').addEventListener('change', () => {
+        const lang = $('profile').selectedOptions[0]?.dataset.language;
+        if (lang && [...$('language').options].some(option => option.value === lang)) $('language').value = lang;
+      });
+    }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    async function refreshJobs() {
+      const response = await fetch('/api/jobs');
+      const jobs = await response.json();
+      $('jobs').classList.toggle('muted', jobs.length === 0);
+      $('jobs').innerHTML = jobs.length ? jobs.map(job => `<section class="job"><div class="status"><h3>${escapeHtml(job.title)}</h3><span>${escapeHtml(job.status)}</span></div><p>${escapeHtml(job.message || '')}</p><progress max="100" value="${Number(job.progress)||0}"></progress>${job.result_path ? `<p>Saved in Audiobookshelf: <strong>${escapeHtml(job.result_path)}</strong></p>` : ''}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ''}</section>`).join('') : 'No jobs yet.';
+    }
+    $('job-form').addEventListener('submit', async event => {
+      event.preventDefault(); $('form-error').textContent = ''; $('submit').disabled = true;
+      const data = new FormData(); data.set('profile_id', $('profile').value); data.set('language', $('language').value); data.set('title', $('title').value);
+      if (source.value === 'file') { if (!$('file').files.length) { $('form-error').textContent = 'Choose a file.'; $('submit').disabled = false; return; } data.set('file', $('file').files[0]); }
+      if (source.value === 'url') data.set('url', $('url').value);
+      if (source.value === 'text') data.set('text', $('text').value);
+      try {
+        const response = await fetch('/api/jobs', {method:'POST', body:data});
+        const result = await response.json(); if (!response.ok) throw new Error(result.detail || 'Could not queue job');
+        event.target.reset(); source.dispatchEvent(new Event('change')); await refreshJobs();
+      } catch (error) { $('form-error').textContent = error.message; }
+      finally { $('submit').disabled = false; }
+    });
+    refreshProfiles().catch(error => $('form-error').textContent = error.message);
+    refreshJobs(); setInterval(() => refreshJobs().catch(() => {}), 3000);
+  </script>
+</body>
+</html>

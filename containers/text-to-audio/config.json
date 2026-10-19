@@ -5,10 +5,12 @@
   "build_locally": true,
   "compose_bake": false,
   "items": [
-    { "path": "build-context", "type": "folder" }
+    { "path": "build-context", "type": "folder" },
+    { "path": "workflow", "type": "folder" }
   ],
   "data_directories": [
     { "path": "data", "uid": 1000, "gid": 1000 },
-    { "path": "models", "uid": 1000, "gid": 1000 }
+    { "path": "models", "uid": 1000, "gid": 1000 },
+    { "path": "workflow-data", "uid": 1000, "gid": 1000 }
   ]
 }

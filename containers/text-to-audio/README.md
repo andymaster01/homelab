@@ -1,7 +1,8 @@
 # Text to audio
 
-This stack runs Voicebox, its WAV to MP3 converter, Docling Serve, and a
-Defuddle URL extractor on `gpuloads-01`. Prepare the pinned Voicebox source once with
+This stack runs Voicebox, its WAV to MP3 converter, Docling Serve, a
+Defuddle URL extractor, and an upload-to-audiobook worker on `gpuloads-01`.
+Prepare the pinned Voicebox source once with
 `bash ./containers/text-to-audio/prepare-source.sh`, then deploy with
 `just deploy-remote text-to-audio`.
 
@@ -73,6 +74,26 @@ The API accepts HTTP and HTTPS URLs on standard ports, checks that the
 submitted hostname resolves to public addresses, and limits each extraction to
 90 seconds. Defuddle follows website redirects while fetching, so keep this
 unauthenticated API on the trusted LAN and don't expose it publicly.
+
+## Upload and create an audiobook
+
+The workflow page is at `http://192.168.1.32:17603`. It accepts one PDF, EPUB,
+or TXT file, a web page URL, or pasted text. Choose a Voicebox profile and
+narration language, then submit the job. Jobs run sequentially so they do not
+compete for Voicebox's CPU and memory. The page shows progress and failures.
+
+PDF and EPUB files are converted to Markdown by Docling. URLs are cleaned by
+Defuddle. The worker splits Markdown at chapter headings, asks Voicebox for
+each track, then waits for the WAV to MP3 sidecar to finish. Numbered MP3 tracks
+and a small `metadata.json` are written to
+`/mnt/media/audiobooks/<book title>/` on the shared media mount. Audiobookshelf
+uses that same path read-only at `/audiobooks`, so the output becomes available
+in its library after its next scan.
+
+The worker API is also available at `/api/jobs` (multipart form fields:
+`profile_id`, `language`, and exactly one of `file`, `url`, or `text`; optional
+`title`). `GET /api/jobs` lists recent jobs and `GET /api/jobs/{id}` returns one
+job. Voice profiles are proxied from Voicebox at `GET /api/profiles`.
 
 ## Shared media mount
 
